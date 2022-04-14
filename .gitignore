@@ -1,4 +1,8 @@
 .ccls-cache/
-build/
+.cache/
+.clang-format
+release/
+debug/
+data/
 compile_commands.json
 .DS_Store
