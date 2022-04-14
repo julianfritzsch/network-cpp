@@ -150,56 +150,49 @@ void Network::dynamical_simulation(double t0, double tf, double dt, int se) {
   arma::size_t Nstep{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
                      1};  // Number of steps
   arma::size_t saveN{Nstep % se == 0 ? Nstep / se : Nstep / se + 1};
-  arma::vec theta = theta0;
-  arma::vec omega(Nin);
+  arma::vec y{arma::join_cols(theta0, arma::vec(Nin))};
   t = arma::vec(saveN);
-  thetadata = arma::mat(N, saveN);
-  omegadata = arma::mat(Nin, saveN);
+  ydata = arma::mat(N + Nin, saveN);
+  ydata.col(0) = y;
   arma::vec deltaCurrent(N + Nin);
-  thetadata.col(0) = theta;
-  omegadata.col(0) = omega;
   t(0) = tt;
-  arma::mat toinv = arma::eye(N + Nin, N + Nin) - dt * df(theta);
+  arma::mat toinv = arma::eye(N + Nin, N + Nin) - dt * df(y);
   arma::mat inv = arma::inv(toinv);
-  deltaCurrent = dt * inv * f(theta, omega);
-  theta += deltaCurrent(arma::span(0, N - 1));
-  omega += deltaCurrent(arma::span(N, N + Nin - 1));
+  deltaCurrent = dt * inv * f(y);
+  y += deltaCurrent;
   tt += dt;
 
   for (int i = 1; i < Nstep - 1; ++i) {
-    if (boxp) {
-      if (tt >= boxtime) {
-        p(boxix) -= boxpower;
-        boxp = false;
-      }
-    }
+    // if (boxp) {
+    //   if (tt >= boxtime) {
+    //     p(boxix) -= boxpower;
+    //     boxp = false;
+    //   }
+    // }
     if (i % se == 0) {
       std::cout << std::fixed << std::setprecision(1)
                 << (tt - t0) / (tf - t0) * 100
                 << "%\nMax omega: " << std::setprecision(4)
-                << arma::max(arma::abs(omega))
+                << arma::max(arma::abs(y(arma::span(N, N + Nin - 1))))
                 << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
-      thetadata.col(i / se) = theta;
-      omegadata.col(i / se) = omega;
+      ydata.col(i / se) = y;
       t(i / se) = tt;
     }
-    deltaCurrent += 2 * inv * (dt * f(theta, omega) - deltaCurrent);
-    theta += deltaCurrent(arma::span(0, N - 1));
-    omega += deltaCurrent(arma::span(N, N + Nin - 1));
+    deltaCurrent += 2 * inv * (dt * f(y) - deltaCurrent);
+    y += deltaCurrent;
     tt += dt;
   }
   if ((Nstep - 1) % se == 0) {
-    deltaCurrent = inv * (dt * f(theta, omega) - deltaCurrent);
-    theta += deltaCurrent(arma::span(0, N - 1));
-    omega += deltaCurrent(arma::span(N, N + Nin - 1));
+    deltaCurrent = inv * (dt * f(y) - deltaCurrent);
+    y += deltaCurrent;
     t(saveN - 1) = tt;
-    thetadata.col(saveN - 1) = theta;
-    omegadata.col(saveN - 1) = omega;
+    ydata.col(saveN - 1) = y;
   }
-  omegadata.insert_rows(omegadata.n_rows, calculate_load_frequencies(dt, se));
-  std::cout << "Final max omega: " << arma::max(arma::abs(omega)) << "\n";
+  ydata.insert_rows(ydata.n_rows, calculate_load_frequencies(dt, se));
+  std::cout << "Final max omega: "
+            << arma::max(arma::abs(y(arma::span(N, N + Nin - 1)))) << "\n";
 }
-//
+
 // Do a dynamical simulation using a the fourth order Kaps-Rentrop method
 void Network::kaps_rentrop(double t0, double tf, double dt, int se) {
   // Setup constants
@@ -225,18 +218,16 @@ void Network::kaps_rentrop(double t0, double tf, double dt, int se) {
   const double c2x{-3.0 / 2.0};
   const double c3x{121.0 / 50.0};
   const double c4x{29.0 / 250.0};
+
   double tt{t0};
   arma::size_t Nstep{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
                      1};  // Number of steps
   arma::size_t saveN{Nstep % se == 0 ? Nstep / se : Nstep / se + 1};
-  arma::vec theta = theta0;
-  arma::vec omega(Nin);
+  arma::vec y{arma::join_cols(theta0, arma::vec(Nin))};
   t = arma::vec(saveN);
-  thetadata = arma::mat(N, saveN);
-  omegadata = arma::mat(Nin, saveN);
+  ydata = arma::mat(N + Nin, saveN);
   arma::vec deltaCurrent(N + Nin);
-  thetadata.col(0) = theta;
-  omegadata.col(0) = omega;
+  ydata.col(0) = y;
   t(0) = tt;
   for (int i = 1; i < Nstep; ++i) {
     // if (boxp) {
@@ -249,58 +240,41 @@ void Network::kaps_rentrop(double t0, double tf, double dt, int se) {
       std::cout << std::fixed << std::setprecision(1)
                 << (tt - t0) / (tf - t0) * 100
                 << "%\nMax omega: " << std::setprecision(4)
-                << arma::max(arma::abs(omega))
+                << arma::max(arma::abs(y(arma::span(N, N + Nin - 1))))
                 << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
-      thetadata.col(i / se) = theta;
-      omegadata.col(i / se) = omega;
+      ydata.col(i / se) = y;
       t(i / se) = tt;
     }
-    arma::mat jac = df(theta);
+    arma::mat jac = df(y);
     arma::sp_mat ls{arma::eye(N + Nin, N + Nin) / gam / dt - jac};
-    arma::vec k1{arma::spsolve(ls, f(theta, omega))};
-    arma::vec k2{
-        arma::spsolve(ls, f(theta + a21 * k1(arma::span(0, N - 1)),
-                            omega + a21 * k1(arma::span(N, N + Nin - 1))) +
-                              c21 * k1 / dt)};
-    arma::vec k3{
-        arma::spsolve(ls, f(theta + a31 * k1(arma::span(0, N - 1)) +
-                                a32 * k2(arma::span(0, N - 1)),
-                            omega + a31 * k1(arma::span(N, N + Nin - 1)) +
-                                a32 * k2(arma::span(N, N + Nin - 1))) +
-                              c31 * k1 / dt + c32 * k2 / dt)};
-    arma::vec k4{
-        arma::spsolve(ls, f(theta + a31 * k1(arma::span(0, N - 1)) +
-                                a32 * k2(arma::span(0, N - 1)),
-                            omega + a31 * k1(arma::span(N, N + Nin - 1)) +
-                                a32 * k2(arma::span(N, N + Nin - 1))) +
-                              c41 * k1 / dt + c42 * k2 / dt + c43 * k3 / dt)};
-    theta +=
-        (b1 * k1(arma::span(0, N - 1)) + b2 * k2(arma::span(0, N - 1)) +
-              b3 * k3(arma::span(0, N - 1)) + b4 * k4(arma::span(0, N - 1)));
-    omega += (b1 * k1(arma::span(N, N + Nin - 1)) +
-                   b2 * k2(arma::span(N, N + Nin - 1)) +
-                   b3 * k3(arma::span(N, N + Nin - 1)) +
-                   b4 * k4(arma::span(N, N + Nin - 1)));
+    arma::vec k1{arma::spsolve(ls, f(y))};
+    arma::vec k2{arma::spsolve(ls, f(y + a21 * k1) + c21 * k1 / dt)};
+    arma::vec k3{arma::spsolve(
+        ls, f(y + a31 * k1 + a32 * k2) + c31 * k1 / dt + c32 * k2 / dt)};
+    arma::vec k4{arma::spsolve(ls, f(y + a31 * k1 + a32 * k2) + c41 * k1 / dt +
+                                       c42 * k2 / dt + c43 * k3 / dt)};
+    y += b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4;
     tt += dt;
   }
-  omegadata.insert_rows(omegadata.n_rows, calculate_load_frequencies(dt, se));
-  std::cout << "Final max omega: " << arma::max(arma::abs(omega)) << "\n";
+  ydata.insert_rows(ydata.n_rows, calculate_load_frequencies(dt, se));
+  std::cout << "Final max omega: "
+            << arma::max(arma::abs(y(arma::span(N, N + Nin - 1)))) << "\n";
 }
 
-arma::vec Network::f(arma::vec th, arma::vec om) {
+arma::vec Network::f(arma::vec y) {
   arma::vec re(N + Nin);
   for (std::size_t i = 0; i < Nin; ++i) {
-    re(i) = om(i);
-    re(N + i) = p(i) - d(i) * om(i);
+    re(i) = y(N + i);
+    re(N + i) = p(i) - d(i) * y(N + i);
     for (auto &j : al[i]) {
-      re(N + i) -= j.second * std::sin(th(i) - th(j.first));
+      re(N + i) -= j.second * std::sin(y(i) - y(j.first));
     }
     re(N + i) /= m(i);
   }
   for (std::size_t i = Nin; i < N; ++i) {
     re(i) = p(i);
     for (auto &j : al[i]) {
-      re(i) -= j.second * std::sin(th(i) - th(j.first));
+      re(i) -= j.second * std::sin(y(i) - y(j.first));
     }
     re(i) /= d(i);
   }
@@ -316,11 +290,11 @@ arma::vec Network::f(arma::vec th, arma::vec om) {
 //┃                                                                         ┃
 //┃ -M(Nno)^(-1)*L(Nin x Nin) -M(Nno)^(-1)*L(Nin x Nno) -M^(-1)*D(Nin xNin) ┃
 //┗                                                                         ┛
-arma::mat Network::df(arma::vec th) {
+arma::mat Network::df(arma::vec &y) {
   arma::mat Lap(N, N, arma::fill::zeros);
   for (std::vector<double>::size_type i = 0; i < N; ++i) {
     for (auto &j : al[i]) {
-      Lap(i, j.first) = -j.second * std::cos(th(i) - th(j.first));
+      Lap(i, j.first) = -j.second * std::cos(y(i) - y(j.first));
     }
   }
   for (arma::size_t i = 0; i < N; ++i) {
@@ -346,27 +320,29 @@ arma::mat Network::df(arma::vec th) {
 // Save the data for the type specified ("angles", "frequency") to path with
 // time included if time = true
 void Network::save_data(std::string path, std::string type, int se, bool time) {
-  arma::uvec ix(omegadata.n_cols % se == 0 ? omegadata.n_cols / se
-                                           : omegadata.n_cols / se + 1);
+  arma::uvec ix(ydata.n_cols % se == 0 ? ydata.n_cols / se
+                                           : ydata.n_cols / se + 1);
   for (int i = 0; i < ix.n_elem; ++i) {
     ix(i) = i * se;
   }
   if (type.compare("frequency") == 0) {
     if (time) {
-      arma::mat tmp =
-          arma::join_cols(arma::conv_to<arma::rowvec>::from(t), omegadata);
+      arma::mat tmp = arma::join_cols(arma::conv_to<arma::rowvec>::from(t),
+                                      ydata.rows(N, 2 * N - 1));
       arma::conv_to<arma::mat>::from(tmp.cols(ix)).save(path, arma::csv_ascii);
     } else {
-      arma::conv_to<arma::mat>::from(omegadata.cols(ix))
+      arma::conv_to<arma::mat>::from(
+          ydata.submat(arma::linspace<arma::uvec>(N, 2 * N - 1), ix))
           .save(path, arma::csv_ascii);
     }
   } else if (type.compare("angles") == 0) {
     if (time) {
-      arma::mat tmp =
-          arma::join_cols(arma::conv_to<arma::rowvec>::from(t), thetadata);
+      arma::mat tmp = arma::join_cols(arma::conv_to<arma::rowvec>::from(t),
+                                      ydata.rows(0, N - 1));
       arma::conv_to<arma::mat>::from(tmp.cols(ix)).save(path, arma::csv_ascii);
     } else {
-      arma::conv_to<arma::mat>::from(thetadata.cols(ix))
+      arma::conv_to<arma::mat>::from(
+          ydata.submat(arma::linspace<arma::uvec>(0, N - 1), ix))
           .save(path, arma::csv_ascii);
     }
   }
@@ -375,20 +351,20 @@ void Network::save_data(std::string path, std::string type, int se, bool time) {
 // Calculate the frequencies of the load buses with a second order approximation
 // of the derivative
 arma::mat Network::calculate_load_frequencies(double dt, int se) {
-  arma::mat re(N - Nin, omegadata.n_cols);
-  re.col(0) = (-1.5 * thetadata(arma::span(Nin, N - 1), 0) +
-               2 * thetadata(arma::span(Nin, N - 1), 1) -
-               0.5 * thetadata(arma::span(Nin, N - 1), 2)) /
+  arma::mat re(N - Nin, ydata.n_cols);
+  re.col(0) = (-1.5 * ydata(arma::span(Nin, N - 1), 0) +
+               2 * ydata(arma::span(Nin, N - 1), 1) -
+               0.5 * ydata(arma::span(Nin, N - 1), 2)) /
               (dt * se);
   for (std::size_t i = 1; i < re.n_cols - 1; ++i) {
-    re.col(i) = (-thetadata(arma::span(Nin, N - 1), i - 1) +
-                 thetadata(arma::span(Nin, N - 1), i + 1)) /
+    re.col(i) = (-ydata(arma::span(Nin, N - 1), i - 1) +
+                 ydata(arma::span(Nin, N - 1), i + 1)) /
                 (2 * dt * se);
   }
   re.col(re.n_cols - 1) =
-      (1.5 * thetadata(arma::span(Nin, N - 1), re.n_cols - 1) -
-       2 * thetadata(arma::span(Nin, N - 1), re.n_cols - 2) +
-       0.5 * thetadata(arma::span(Nin, N - 1), re.n_cols - 3)) /
+      (1.5 * ydata(arma::span(Nin, N - 1), re.n_cols - 1) -
+       2 * ydata(arma::span(Nin, N - 1), re.n_cols - 2) +
+       0.5 * ydata(arma::span(Nin, N - 1), re.n_cols - 3)) /
       (dt * se);
   return re;
 }
@@ -396,14 +372,14 @@ arma::mat Network::calculate_load_frequencies(double dt, int se) {
 void Network::plot_results(std::string type) {
   if (type.compare("frequency") == 0) {
     std::vector<std::vector<double>> tmp;
-    for (int i = 0; i < omegadata.n_rows; ++i) {
-      tmp.push_back(arma::conv_to<std::vector<double>>::from(omegadata.row(i)));
+    for (int i = 0; i < N; ++i) {
+      tmp.push_back(arma::conv_to<std::vector<double>>::from(ydata.row(i + N)));
     }
     matplot::plot(t, tmp, "k");
   } else if (type.compare("angles") == 0) {
     std::vector<std::vector<double>> tmp;
-    for (int i = 0; i < thetadata.n_rows; ++i) {
-      tmp.push_back(arma::conv_to<std::vector<double>>::from(thetadata.row(i)));
+    for (int i = 0; i < N; ++i) {
+      tmp.push_back(arma::conv_to<std::vector<double>>::from(ydata.row(i)));
     }
     matplot::plot(t, tmp, "k");
   }
@@ -424,8 +400,8 @@ void Network::plot_results(std::string areafile, std::string type) {
     areas.push_back(tmp);
   }
   int se{static_cast<int>(round(0.05 / (t[1] - t[0])))};
-  arma::uvec ix(omegadata.n_cols % se == 0 ? omegadata.n_cols / se
-                                           : omegadata.n_cols / se + 1);
+  arma::uvec ix(ydata.n_cols % se == 0 ? ydata.n_cols / se
+                                           : ydata.n_cols / se + 1);
   for (int i = 0; i < ix.n_elem; ++i) {
     ix(i) = i * se;
   }
@@ -434,7 +410,7 @@ void Network::plot_results(std::string areafile, std::string type) {
     std::vector<std::vector<double>> tmp;
     for (auto &j : areas[i]) {
       tmp.push_back(arma::conv_to<std::vector<double>>::from(
-          omegadata.submat(arma::uvec{j}, ix)));
+          ydata.submat(arma::uvec{j + N}, ix)));
     }
     matplot::subplot(n_rows, 2, i);
     matplot::plot(arma::conv_to<arma::vec>::from(t.rows(ix)), tmp, "k");

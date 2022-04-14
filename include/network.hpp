@@ -55,8 +55,7 @@ class Network {
   arma::vec p;          // Power
   arma::vec theta0;     // Vector of initial angles
   arma::vec t;          // Vector of time stapms for a dynamical simulation
-  arma::mat omegadata;  // Matrix of the frequencies for a dynamical simulation
-  arma::mat thetadata;  // Matrix of the angles for a dynamical simulation
+  arma::mat ydata;      // Matrix containing angles and frequencies
 
   void create_adjlist(std::string adjlist);  // Create the adjacency list from
                                              // the file adjlist
@@ -68,9 +67,9 @@ class Network {
       std::string angles);  // Set initial angles to the values
                             // given in the file angles
   arma::mat calculate_load_frequencies(
-      double dt, int se);  // Get frequencies of the non-inertia nodes
-  arma::vec f(arma::vec th, arma::vec om);  // Function value
-  arma::mat df(arma::vec th);               // Jacobian of the system
+      double dt, int se);      // Get frequencies of the non-inertia nodes
+  arma::vec f(arma::vec y);    // Function value
+  arma::mat df(arma::vec& y);  // Jacobian of the system
   bool boxp{false};
   std::size_t boxix;
   double boxpower;
