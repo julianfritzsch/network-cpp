@@ -136,7 +136,7 @@ void Network::set_initial_angles(std::string angles) {
 }
 
 void Network::step(std::size_t node, double power) { p(node) += power; }
-void Network::box(std::size_t node, double power, double time){
+void Network::box(std::size_t node, double power, double time) {
   boxp = true;
   boxix = node;
   boxpower = power;
@@ -195,6 +195,93 @@ void Network::dynamical_simulation(double t0, double tf, double dt, int se) {
     t(saveN - 1) = tt;
     thetadata.col(saveN - 1) = theta;
     omegadata.col(saveN - 1) = omega;
+  }
+  omegadata.insert_rows(omegadata.n_rows, calculate_load_frequencies(dt, se));
+  std::cout << "Final max omega: " << arma::max(arma::abs(omega)) << "\n";
+}
+//
+// Do a dynamical simulation using a the fourth order Kaps-Rentrop method
+void Network::kaps_rentrop(double t0, double tf, double dt, int se) {
+  // Setup constants
+  const double gam{1.0 / 2.0};
+  const double a21{2.0};
+  const double a31{48.0 / 25.0};
+  const double a32{6.0 / 25.0};
+  const double c21{-8.0};
+  const double c31{372.0 / 25.0};
+  const double c32{12.0 / 5.0};
+  const double c41{-112.0 / 125.0};
+  const double c42{-54.0 / 125.0};
+  const double c43{-2.0 / 5.0};
+  const double b1{19.0 / 9.0};
+  const double b2{1.0 / 2.0};
+  const double b3{25.0 / 108.0};
+  const double b4{125.0 / 108.0};
+  // const double e1{17.0 / 54.0};
+  // const double e2{7.0 / 36.0};
+  // const double e3{0.0};
+  // const double e4{125.0 / 108.0};
+  const double c1x{1.0 / 2.0};
+  const double c2x{-3.0 / 2.0};
+  const double c3x{121.0 / 50.0};
+  const double c4x{29.0 / 250.0};
+  double tt{t0};
+  arma::size_t Nstep{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
+                     1};  // Number of steps
+  arma::size_t saveN{Nstep % se == 0 ? Nstep / se : Nstep / se + 1};
+  arma::vec theta = theta0;
+  arma::vec omega(Nin);
+  t = arma::vec(saveN);
+  thetadata = arma::mat(N, saveN);
+  omegadata = arma::mat(Nin, saveN);
+  arma::vec deltaCurrent(N + Nin);
+  thetadata.col(0) = theta;
+  omegadata.col(0) = omega;
+  t(0) = tt;
+  for (int i = 1; i < Nstep; ++i) {
+    // if (boxp) {
+    //   if (tt >= boxtime) {
+    //     p(boxix) -= boxpower;
+    //     boxp = false;
+    //   }
+    // }
+    if (i % se == 0) {
+      std::cout << std::fixed << std::setprecision(1)
+                << (tt - t0) / (tf - t0) * 100
+                << "%\nMax omega: " << std::setprecision(4)
+                << arma::max(arma::abs(omega))
+                << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
+      thetadata.col(i / se) = theta;
+      omegadata.col(i / se) = omega;
+      t(i / se) = tt;
+    }
+    arma::mat jac = df(theta);
+    arma::sp_mat ls{arma::eye(N + Nin, N + Nin) / gam / dt - jac};
+    arma::vec k1{arma::spsolve(ls, f(theta, omega))};
+    arma::vec k2{
+        arma::spsolve(ls, f(theta + a21 * k1(arma::span(0, N - 1)),
+                            omega + a21 * k1(arma::span(N, N + Nin - 1))) +
+                              c21 * k1 / dt)};
+    arma::vec k3{
+        arma::spsolve(ls, f(theta + a31 * k1(arma::span(0, N - 1)) +
+                                a32 * k2(arma::span(0, N - 1)),
+                            omega + a31 * k1(arma::span(N, N + Nin - 1)) +
+                                a32 * k2(arma::span(N, N + Nin - 1))) +
+                              c31 * k1 / dt + c32 * k2 / dt)};
+    arma::vec k4{
+        arma::spsolve(ls, f(theta + a31 * k1(arma::span(0, N - 1)) +
+                                a32 * k2(arma::span(0, N - 1)),
+                            omega + a31 * k1(arma::span(N, N + Nin - 1)) +
+                                a32 * k2(arma::span(N, N + Nin - 1))) +
+                              c41 * k1 / dt + c42 * k2 / dt + c43 * k3 / dt)};
+    theta +=
+        (b1 * k1(arma::span(0, N - 1)) + b2 * k2(arma::span(0, N - 1)) +
+              b3 * k3(arma::span(0, N - 1)) + b4 * k4(arma::span(0, N - 1)));
+    omega += (b1 * k1(arma::span(N, N + Nin - 1)) +
+                   b2 * k2(arma::span(N, N + Nin - 1)) +
+                   b3 * k3(arma::span(N, N + Nin - 1)) +
+                   b4 * k4(arma::span(N, N + Nin - 1)));
+    tt += dt;
   }
   omegadata.insert_rows(omegadata.n_rows, calculate_load_frequencies(dt, se));
   std::cout << "Final max omega: " << arma::max(arma::abs(omega)) << "\n";

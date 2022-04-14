@@ -41,6 +41,7 @@ class Network {
                  bool time = true);
   void plot_results(std::string type = "frequency");
   void plot_results(std::string areafile, std::string type = "frequency");
+  void kaps_rentrop(double t0, double tf, double dt = 5.0e-3, int se = 1);
 
  private:
   // The adjacency list is setup as follows: the vector entry at point i

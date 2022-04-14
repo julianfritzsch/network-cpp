@@ -35,8 +35,9 @@ int main(int argv, char **argc) {
   std::string coeffs = std::string(SOURCE_DIR) + "/data/coeffs.csv";
   std::string angles = std::string(SOURCE_DIR) + "/data/syncedangles.csv";
   net::Network test{adjlist, coeffs, angles};
-  test.box(419, -9.0, 10);
-  test.dynamical_simulation(0.0, 50, 5.0e-3);
+  test.step(419, -9.0);
+  // test.dynamical_simulation(0.0, 50, 1e-3);
+  test.kaps_rentrop(0, 20, 1.0e-2);
   // test.plot_results(std::string(SOURCE_DIR) + "/data/7areas.dat", "frequency");
   test.save_data("test.csv", "frequency", 1);
   test.save_data("test2.csv", "angles", 1);
