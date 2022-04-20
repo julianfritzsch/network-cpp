@@ -19,6 +19,7 @@ find_package(Armadillo REQUIRED)
 find_package(Matplot++ REQUIRED)
 
 
+
 # add the executable
 add_executable(net main.cpp)
 add_subdirectory(include)

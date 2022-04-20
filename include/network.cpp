@@ -156,7 +156,7 @@ void Network::dynamical_simulation(double t0, double tf, double dt, int se) {
   ydata.col(0) = y;
   arma::vec deltaCurrent(N + Nin);
   t(0) = tt;
-  arma::mat toinv = arma::eye(N + Nin, N + Nin) - dt * df(y);
+  arma::mat toinv = arma::eye(N + Nin, N + Nin) - dt * arma::mat(df(y));
   arma::mat inv = arma::inv(toinv);
   deltaCurrent = dt * inv * f(y);
   y += deltaCurrent;
@@ -194,7 +194,8 @@ void Network::dynamical_simulation(double t0, double tf, double dt, int se) {
 }
 
 // Do a dynamical simulation using a the fourth order Kaps-Rentrop method
-void Network::kaps_rentrop(double t0, double tf, double dt, int se) {
+void Network::kaps_rentrop(double t0, double tf, double dt, int se,
+                           int mtries) {
   // Setup constants
   const double gam{1.0 / 2.0};
   const double a21{2.0};
@@ -245,20 +246,96 @@ void Network::kaps_rentrop(double t0, double tf, double dt, int se) {
       ydata.col(i / se) = y;
       t(i / se) = tt;
     }
-    arma::mat jac = df(y);
-    arma::sp_mat ls{arma::eye(N + Nin, N + Nin) / gam / dt - jac};
+    arma::sp_mat jac = df(y);
+    arma::sp_mat ls{arma::speye(N + Nin, N + Nin) / gam / dt - jac};
     arma::vec k1{arma::spsolve(ls, f(y))};
     arma::vec k2{arma::spsolve(ls, f(y + a21 * k1) + c21 * k1 / dt)};
     arma::vec k3{arma::spsolve(
         ls, f(y + a31 * k1 + a32 * k2) + c31 * k1 / dt + c32 * k2 / dt)};
     arma::vec k4{arma::spsolve(ls, f(y + a31 * k1 + a32 * k2) + c41 * k1 / dt +
                                        c42 * k2 / dt + c43 * k3 / dt)};
+    // arma::vec k1{bigradient(ls, f(y), arma::vec{ls.n_rows,
+    // arma::fill::zeros})}; arma::vec k2{bigradient(ls, f(y + a21 * k1) + c21 *
+    // k1 / dt, k1)}; arma::vec k3{bigradient(
+    //     ls, f(y + a31 * k1 + a32 * k2) + c31 * k1 / dt + c32 * k2 / dt, k2)};
+    // arma::vec k4{bigradient(ls,
+    //                         f(y + a31 * k1 + a32 * k2) + c41 * k1 / dt +
+    //                             c42 * k2 / dt + c43 * k3 / dt,
+    //                         k3)};
+    // arma::mat L, U, P;
+    // arma::lu(L, U, P, ls);
+    // arma::vec k1{f(y)};
+    // lusolve(L, U, P, k1);
+    // arma::vec k2{f(y + a21 * k1) + c21 * k1 / dt};
+    // lusolve(L, U, P, k2);
+    // arma::vec k3{f(y + a31 * k1 + a32 * k2) + c31 * k1 / dt + c32 * k2 / dt};
+    // lusolve(L, U, P, k3);
+    // arma::vec k4{f(y + a31 * k1 + a32 * k2) + c41 * k1 / dt + c42 * k2 / dt +
+    //              c43 * k3 / dt};
+    // lusolve(L, U, P, k4);
     y += b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4;
     tt += dt;
   }
   ydata.insert_rows(ydata.n_rows, calculate_load_frequencies(dt, se));
   std::cout << "Final max omega: "
             << arma::max(arma::abs(y(arma::span(N, N + Nin - 1)))) << "\n";
+}
+
+template <typename T>
+arma::vec Network::bigradient(T &A, arma::vec b, arma::vec xk, double error) {
+  // First check if xk is already a solution
+  if (arma::approx_equal(A * xk, b, "absdiff", error)) {
+    return xk;
+  }
+  // Set up initial values and define all vectors
+  arma::vec rk{b - A * xk};
+  arma::vec rbk = rk;
+  arma::vec pk = rk;
+  arma::vec pbk = rk;
+  arma::vec rk1, rbk1, pk1, pbk1;
+  double bk;
+  // Do the first step
+  double ak{arma::conv_to<double>::from((rbk.t() * rk) / (pbk.t() * A * pk))};
+  arma::vec xk1{xk + ak * pk};
+  if (arma::max(arma::abs(xk - xk1)) < error) {
+    return xk1;
+  }
+  xk = xk1;
+  // Do the iteration
+  for (std::size_t i = 0; i < b.n_rows - 1; ++i) {
+    rk1 = rk - ak * A * pk;
+    rbk1 = rbk - ak * A.t() * pbk;
+    bk = arma::conv_to<double>::from((rbk1.t() * rk1) / (rbk.t() * rk));
+    pk1 = rk1 + bk * pk;
+    pbk1 = rbk1 + bk * pbk;
+    rk = rk1;
+    rbk = rbk1;
+    pk = pk1;
+    pbk = pbk1;
+    ak = arma::conv_to<double>::from((rbk.t() * rk) / (pbk.t() * A * pk));
+    xk1 = xk + ak * pk;
+    if (arma::max(arma::abs(xk - xk1)) < error) {
+      return xk1;
+    }
+    xk = xk1;
+  }
+  return xk1;
+}
+
+void Network::lusolve(arma::mat &L, arma::mat &U, arma::mat &P, arma::vec &x) {
+  x = P * x;
+  for (std::size_t i = 0; i < x.n_rows; ++i) {
+    for (std::size_t j = 0; j < i; ++j) {
+      x(i) -= L(i, j) * x(j);
+    }
+    x(i) /= L(i, i);
+  }
+  for (std::size_t i = x.n_rows; i-- > 0;) {
+    for (std::size_t j = i + 1; j < x.n_rows; ++j) {
+      x(i) -= U(i, j) * x(j);
+    }
+    x(i) /= U(i, i);
+  }
 }
 
 arma::vec Network::f(arma::vec y) {
@@ -290,30 +367,28 @@ arma::vec Network::f(arma::vec y) {
 //┃                                                                         ┃
 //┃ -M(Nno)^(-1)*L(Nin x Nin) -M(Nno)^(-1)*L(Nin x Nno) -M^(-1)*D(Nin xNin) ┃
 //┗                                                                         ┛
-arma::mat Network::df(arma::vec &y) {
-  arma::mat Lap(N, N, arma::fill::zeros);
+arma::sp_mat Network::df(arma::vec &y) {
+  arma::sp_mat Lap(N, N);
   for (std::vector<double>::size_type i = 0; i < N; ++i) {
     for (auto &j : al[i]) {
       Lap(i, j.first) = -j.second * std::cos(y(i) - y(j.first));
     }
   }
-  for (arma::size_t i = 0; i < N; ++i) {
+  for (std::size_t i = 0; i < N; ++i) {
     Lap(i, i) = -arma::sum(Lap.row(i));
   }
-  arma::mat Lapin = Lap.head_rows(Nin);
-  arma::mat Lapno = Lap.tail_rows(N - Nin);
-  for (arma::size_t i = 0; i < Lapin.n_rows; ++i) {
-    Lapin.row(i) /= m(i);
+  for (std::size_t i = 0; i < Nin; ++i) {
+    Lap.row(i) /= m(i);
   }
-  for (arma::size_t i = 0; i < Lapno.n_rows; ++i) {
-    Lapno.row(i) /= d(Nin + i);
+  for (std::size_t i = Nin; i < N; ++i) {
+    Lap.row(i) /= d(i);
   }
-  arma::mat D = arma::diagmat(d.head_rows(Nin));
-  arma::mat M = arma::diagmat(m.head_rows(Nin));
-  arma::mat A =
-      arma::join_cols(arma::join_rows(arma::zeros(Nin, N), arma::eye(Nin, Nin)),
-                      arma::join_rows(-Lapno, arma::zeros(N - Nin, Nin)),
-                      arma::join_rows(-Lapin, -arma::inv(M) * D));
+  arma::sp_mat gamma(Nin, Nin);
+  gamma.diag() = -d.head_rows(Nin) / m.head_rows(Nin);
+  arma::sp_mat A = arma::join_cols(
+      arma::join_rows(arma::sp_mat(Nin, N), arma::speye(Nin, Nin)),
+      arma::join_rows(-Lap.tail_rows(N - Nin), arma::sp_mat(N - Nin, Nin)),
+      arma::join_rows(-Lap.head_rows(Nin), gamma));
   return A;
 }
 
@@ -321,7 +396,7 @@ arma::mat Network::df(arma::vec &y) {
 // time included if time = true
 void Network::save_data(std::string path, std::string type, int se, bool time) {
   arma::uvec ix(ydata.n_cols % se == 0 ? ydata.n_cols / se
-                                           : ydata.n_cols / se + 1);
+                                       : ydata.n_cols / se + 1);
   for (int i = 0; i < ix.n_elem; ++i) {
     ix(i) = i * se;
   }
@@ -361,11 +436,10 @@ arma::mat Network::calculate_load_frequencies(double dt, int se) {
                  ydata(arma::span(Nin, N - 1), i + 1)) /
                 (2 * dt * se);
   }
-  re.col(re.n_cols - 1) =
-      (1.5 * ydata(arma::span(Nin, N - 1), re.n_cols - 1) -
-       2 * ydata(arma::span(Nin, N - 1), re.n_cols - 2) +
-       0.5 * ydata(arma::span(Nin, N - 1), re.n_cols - 3)) /
-      (dt * se);
+  re.col(re.n_cols - 1) = (1.5 * ydata(arma::span(Nin, N - 1), re.n_cols - 1) -
+                           2 * ydata(arma::span(Nin, N - 1), re.n_cols - 2) +
+                           0.5 * ydata(arma::span(Nin, N - 1), re.n_cols - 3)) /
+                          (dt * se);
   return re;
 }
 
@@ -401,7 +475,7 @@ void Network::plot_results(std::string areafile, std::string type) {
   }
   int se{static_cast<int>(round(0.05 / (t[1] - t[0])))};
   arma::uvec ix(ydata.n_cols % se == 0 ? ydata.n_cols / se
-                                           : ydata.n_cols / se + 1);
+                                       : ydata.n_cols / se + 1);
   for (int i = 0; i < ix.n_elem; ++i) {
     ix(i) = i * se;
   }

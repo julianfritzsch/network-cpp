@@ -15,13 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <armadillo>
-#include <iostream>
-#include <string>
 #include <matplot/matplot.h>
 
-#include "include/network.hpp"
+#include <armadillo>
+#include <chrono>
+#include <iostream>
+#include <string>
+
 #include "ProjectConfig.hpp"
+#include "include/network.hpp"
 
 int main(int argv, char **argc) {
   if (argv == 2) {
@@ -36,11 +38,15 @@ int main(int argv, char **argc) {
   std::string angles = std::string(SOURCE_DIR) + "/data/syncedangles.csv";
   net::Network test{adjlist, coeffs, angles};
   test.step(419, -9.0);
-  // test.kaps_rentrop(0, 20, 1.0e-2);
+  // auto start = std::chrono::high_resolution_clock::now();
+  test.kaps_rentrop(0, 5, 1.0e-2);
+  // auto duration = std::chrono::high_resolution_clock::now() - start;
+  // std::cout << std::chrono::duration<double, std::milli>(duration).count()
+  // << std::endl;
   // test.save_data("testrk.csv", "frequency", 1);
-  test.dynamical_simulation(0.0, 20, 5e-3);
-  test.save_data("testim.csv", "frequency", 1);
-  test.save_data("testima.csv", "angles", 1);
+  // test.dynamical_simulation(0.0, 20, 5e-3);
+  // test.save_data("testim.csv", "frequency", 1);
+  // test.save_data("testima.csv", "angles", 1);
 
   return 0;
 }
