@@ -41,7 +41,8 @@ class Network {
                  bool time = true);
   void plot_results(std::string type = "frequency");
   void plot_results(std::string areafile, std::string type = "frequency");
-  void kaps_rentrop(double t0, double tf, double dt = 5.0e-3, int se = 1);
+  void kaps_rentrop(double t0, double tf, double dtstart = 5.0e-3,
+                    double dtmax = 1e-1, double eps = 1.0e-3, int mtries = 40);
 
  private:
   // The adjacency list is setup as follows: the vector entry at point i
@@ -49,13 +50,13 @@ class Network {
   // <node, weight>
   std::vector<std::vector<std::pair<int, double>>> al;  // Adjacency list
   std::size_t N;                                        // Number of nodes
-  std::size_t Nin;      // Number of nodes with inertia
-  arma::vec m;          // Inertia
-  arma::vec d;          // Damping
-  arma::vec p;          // Power
-  arma::vec theta0;     // Vector of initial angles
-  arma::vec t;          // Vector of time stapms for a dynamical simulation
-  arma::mat ydata;      // Matrix containing angles and frequencies
+  std::size_t Nin;   // Number of nodes with inertia
+  arma::vec m;       // Inertia
+  arma::vec d;       // Damping
+  arma::vec p;       // Power
+  arma::vec theta0;  // Vector of initial angles
+  arma::vec t;       // Vector of time stapms for a dynamical simulation
+  arma::mat ydata;   // Matrix containing angles and frequencies
 
   void create_adjlist(std::string adjlist);  // Create the adjacency list from
                                              // the file adjlist
@@ -66,10 +67,10 @@ class Network {
   void set_initial_angles(
       std::string angles);  // Set initial angles to the values
                             // given in the file angles
-  arma::mat calculate_load_frequencies(
-      double dt, int se);      // Get frequencies of the non-inertia nodes
-  arma::vec f(arma::vec y);    // Function value
-  arma::mat df(arma::vec& y);  // Jacobian of the system
+  arma::mat
+  calculate_load_frequencies();   // Get frequencies of the non-inertia nodes
+  arma::vec f(arma::vec y);       // Function value
+  arma::sp_mat df(arma::vec& y);  // Jacobian of the system
   bool boxp{false};
   std::size_t boxix;
   double boxpower;
