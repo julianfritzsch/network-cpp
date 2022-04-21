@@ -35,11 +35,11 @@ int main(int argv, char **argc) {
   std::string coeffs = std::string(SOURCE_DIR) + "/data/coeffs.csv";
   std::string angles = std::string(SOURCE_DIR) + "/data/syncedangles.csv";
   net::Network test{adjlist, coeffs, angles};
-  // test.step(419, -9.0);
-  test.box(419, -9.0, 10);
-  test.kaps_rentrop(0, 100, 1.0e-2);
-  test.save_data("testrk.csv", "frequency", 1);
-  test.save_data("testrka.csv", "angles", 1);
+  test.step(419, -9.0);
+  // test.box(419, -9.0, 10);
+  test.kapsRentrop(0, 20, 1.0e-2);
+  test.saveData("testrk.csv", "frequency", 1);
+  test.saveData("testrka.csv", "angles", 1);
 
   return 0;
 }

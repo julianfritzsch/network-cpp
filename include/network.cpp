@@ -25,23 +25,41 @@
 #include <vector>
 
 namespace net {
+/**
+ * Constructor without initial angles.
+ * @param adjlist Name of the file that contains the adjacency list. The
+ * adjacency list needs to be in the format node0, node1, weight
+ * @param coeffs Name of the file that contains the coefficients. The file needs
+ * to be in the format node, inertia, damping, power production / consumption
+ * */
 Network::Network(std::string adjlist, std::string coeffs) {
-  create_adjlist(adjlist);
-  create_coefflists(coeffs);
-  set_initial_angles();
+  createAdjlist(adjlist);
+  createCoeffLists(coeffs);
+  setInitialAngles();
 }
 
+/**
+ * Constructor with initial angles.
+ * @param adjlist Name of the file that contains the adjacency list. The
+ * adjacency list needs to be in the format node0, node1, weight
+ * @param coeffs Name of the file that contains the coefficients. The file needs
+ * to be in the format node, inertia, damping, power production / consumption
+ * @param angles Name of the file containing the initial angles. The initial
+ * angle for each node should be on a single row.
+ * */
 Network::Network(std::string adjlist, std::string coeffs, std::string angles) {
-  create_adjlist(adjlist);
-  create_coefflists(coeffs);
-  set_initial_angles(angles);
+  createAdjlist(adjlist);
+  createCoeffLists(coeffs);
+  setInitialAngles(angles);
 }
 
-// Read in the adjacency list given in the format:
-// node1, node2, weight
-// The vector at position i contains all nodes connected to node i with the
-// weight of the line. The connected node and the weight are stored as a pair.
-void Network::create_adjlist(std::string adjlist) {
+/**
+ * Read in the adjacency list.
+ * The file needs to be given in the format node1, node2, weight.
+ * The list is stored into Network::adjacencyList.
+ * @param adjlist Name of the file containing the adjacency list
+ */
+void Network::createAdjlist(std::string adjlist) {
   assert(std::filesystem::exists(adjlist));
   std::ifstream adjinput(adjlist);
   std::string line;
@@ -71,26 +89,31 @@ void Network::create_adjlist(std::string adjlist) {
       }
       ++colindex;
     }
-    while (al.size() <= startnode || al.size() <= endnode) {
-      al.push_back(std::vector<std::pair<int, double>>());
+    while (adjacencyList.size() <= startnode ||
+           adjacencyList.size() <= endnode) {
+      adjacencyList.push_back(std::vector<std::pair<int, double>>());
     }
-    al[startnode].push_back({endnode, lineweight});
-    al[endnode].push_back({startnode, lineweight});
+    adjacencyList[startnode].push_back({endnode, lineweight});
+    adjacencyList[endnode].push_back({startnode, lineweight});
   }
   adjinput.close();
-  N = al.size();
+  nNodes = adjacencyList.size();
 }
 
-// Read in the coefficients list in the format
-// node, inertia, damping, power
-// At the moment the inertia-full nodes need to be consecutive at the beginning
-// TODO: Allow for arbitrarily mixed inertia-full and inertia-less nodes.
-void Network::create_coefflists(std::string coeffs) {
+/**
+ * Read in the coefficients list.
+ * The file needs to be given in the format node, inertia, damping, power.
+ * At the moment the inertia-full nodes need to be consecutive at the beginning.
+ * @param coeffs Name of the file containing the coefficients
+ * @todo Allow for arbitrarily ordered inertia-full and inertia-less nodes.
+ */
+void Network::createCoeffLists(std::string coeffs) {
   assert(std::filesystem::exists(coeffs));
-  // Make m, d, and p to be of appropriate size
-  m = arma::vec(N, arma::fill::zeros);
-  d = arma::vec(N, arma::fill::zeros);
-  p = arma::vec(N, arma::fill::zeros);
+  // Allocate space for inertia, damping, and power
+  inertia = arma::vec(nNodes);
+  damping = arma::vec(nNodes);
+  power = arma::vec(nNodes);
+  // Read file into respective vectors
   std::ifstream coeffin(coeffs);
   std::string line;
   int colindex{};
@@ -105,13 +128,13 @@ void Network::create_coefflists(std::string coeffs) {
           gen = static_cast<arma::size_t>(round(tempin));
           break;
         case 1:
-          m(gen) = tempin;
+          inertia(gen) = tempin;
           break;
         case 2:
-          d(gen) = tempin;
+          damping(gen) = tempin;
           break;
         case 3:
-          p(gen) = tempin;
+          power(gen) = tempin;
           break;
         default:
           break;
@@ -119,63 +142,106 @@ void Network::create_coefflists(std::string coeffs) {
       if (ss.peek() == ',') {
         ss.ignore();
       }
-      arma::vec tmp(N, arma::fill::value(1.0e-6));
-      Nin = arma::sum(m > tmp);
       ++colindex;
     }
   }
   coeffin.close();
+  // Get number of nodes with inertia
+  arma::vec tmp(nNodes, arma::fill::value(1.0e-6));
+  nInertia = arma::sum(inertia > tmp);
 }
 
-void Network::set_initial_angles() { theta0 = arma::vec(N, arma::fill::zeros); }
+/** Set initial angles to zero. */
+void Network::setInitialAngles() {
+  initAngles = arma::vec(nNodes, arma::fill::zeros);
+}
 
-void Network::set_initial_angles(std::string angles) {
+/**
+ * Set initial angles to given values.
+ * @param angles Name of the file containing the inital angles
+ */
+void Network::setInitialAngles(std::string angles) {
   assert(std::filesystem::exists(angles));
-  theta0 = arma::vec(N);
-  theta0.load(angles, arma::csv_ascii);
+  initAngles = arma::vec(nNodes);
+  initAngles.load(angles, arma::csv_ascii);
 }
 
-void Network::step(std::size_t node, double power) { p(node) += power; }
-void Network::box(std::size_t node, double power, double time) {
-  boxp = true;
-  boxix = node;
-  boxpower = power;
-  p(node) += power;
-  boxtime = time;
+/**
+ * Create a step perturbation.
+ * Changes the power of the given node by the given power change:
+ * `power(node) += powerChange`
+ * @param node Node whose power is changed
+ * @param powerChange amount of change in power
+ */
+void Network::step(std::size_t node, double powerChange) {
+  power(node) += powerChange;
 }
 
-// Do a dynamical simulation using a semi-implicit mid-point method
-void Network::dynamical_simulation(double t0, double tf, double dt, int se) {
+/**
+ * Create a box perturbation.
+ * Changes the power of the given node by the given power change:
+ * `power(node) += powerChange`. In a dynamical simulation the power will be
+ * reset after `time` has passed.
+ * @param node Node whose power is changed
+ * @param powerChange amount of change in power
+ * @param time Duration of perturbation
+ */
+void Network::box(std::size_t node, double powerChange, double time) {
+  boxPer = true;
+  boxIx = node;
+  boxPower = powerChange;
+  power(node) += powerChange;
+  boxTime = time;
+}
+
+/**
+ * Run a dynamical simulation.
+ * Do a dynamical simulation of the swing equations using a semi-implicit
+ * mid-point method.
+ * This method is extremely fast as it only requires a single inversion of the
+ * Jacobian but might lead to a small zick-zack behavior. This functions sets
+ * the values of Network::t and Network::yData.
+ * @param t0 Start time
+ * @param tf Finish time
+ * @param dt Time step
+ * @param se Save only every `se`th step. Recommended to leave at default unless
+ * memory problems are encountered.
+ * @todo This functions should be refactored to be an interface that allows
+ * different methods to be chosen.
+ */
+void Network::dynamicalSimulation(double t0, double tf, double dt, int se) {
   double tt{t0};
   arma::size_t Nstep{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
                      1};  // Number of steps
   arma::size_t saveN{Nstep % se == 0 ? Nstep / se : Nstep / se + 1};
-  arma::vec y{arma::join_cols(theta0, arma::vec(Nin))};
+  arma::vec y{arma::join_cols(initAngles, arma::vec(nInertia))};
   t = arma::vec(saveN);
-  ydata = arma::mat(N + Nin, saveN);
-  ydata.col(0) = y;
-  arma::vec deltaCurrent(N + Nin);
+  yData = arma::mat(nNodes + nInertia, saveN);
+  yData.col(0) = y;
+  arma::vec deltaCurrent(nNodes + nInertia);
   t(0) = tt;
-  arma::mat toinv = arma::eye(N + Nin, N + Nin) - dt * arma::mat(df(y));
+  arma::mat toinv =
+      arma::eye(nNodes + nInertia, nNodes + nInertia) - dt * arma::mat(df(y));
   arma::mat inv = arma::inv(toinv);
   deltaCurrent = dt * inv * f(y);
   y += deltaCurrent;
   tt += dt;
 
   for (int i = 1; i < Nstep - 1; ++i) {
-    if (boxp) {
-      if (tt >= boxtime) {
-        p(boxix) -= boxpower;
-        boxp = false;
+    if (boxPer) {
+      if (tt >= boxTime) {
+        power(boxIx) -= boxPower;
+        boxPer = false;
       }
     }
     if (i % se == 0) {
       std::cout << std::fixed << std::setprecision(1)
                 << (tt - t0) / (tf - t0) * 100
                 << "%\nMax omega: " << std::setprecision(4)
-                << arma::max(arma::abs(y(arma::span(N, N + Nin - 1))))
+                << arma::max(
+                       arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
                 << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
-      ydata.col(i / se) = y;
+      yData.col(i / se) = y;
       t(i / se) = tt;
     }
     deltaCurrent += 2 * inv * (dt * f(y) - deltaCurrent);
@@ -186,17 +252,33 @@ void Network::dynamical_simulation(double t0, double tf, double dt, int se) {
     deltaCurrent = inv * (dt * f(y) - deltaCurrent);
     y += deltaCurrent;
     t(saveN - 1) = tt;
-    ydata.col(saveN - 1) = y;
+    yData.col(saveN - 1) = y;
   }
-  ydata.insert_rows(ydata.n_rows, calculate_load_frequencies());
+  yData.insert_rows(yData.n_rows, calculateLoadFrequencies());
   std::cout << "Final max omega: "
-            << arma::max(arma::abs(y(arma::span(N, N + Nin - 1)))) << "\n";
+            << arma::max(
+                   arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+            << "\n";
 }
 
-// Do a dynamical simulation using a the fourth order Kaps-Rentrop method with
-// adaptive stepsize
-void Network::kaps_rentrop(double t0, double tf, double dtstart, double dtmax,
-                           double eps, int mtries) {
+/**
+ * Run a dynamical simulation.
+ * Run a dynamical simulation using the fourth order Kaps-Rentrop method with
+ * adaptive stepsize. This method is more precise and stable but considerably
+ * slower as it require 4 linear systems to be solved at every step.
+ * @param t0 Start time
+ * @param tf Finish time
+ * @param dtStart First time step
+ * @param dtMax Maximum allowed time step
+ * @param eps Maximum allowed error at each step. \f$\text{error} < \varepsilon
+ * y + \varepsilon\f$
+ * @param maxTries Maximum allowed tries for one step. The method will abort if
+ * maxTries is reached.
+ * @todo Use a different solver to directly obtain LU-decomposition to only do
+ * it once per step
+ */
+void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
+                          double eps, int maxTries) {
   // Setup constants
   const double gam{1.0 / 2.0};
   const double a21{2.0};
@@ -222,27 +304,27 @@ void Network::kaps_rentrop(double t0, double tf, double dtstart, double dtmax,
   const double c4x{29.0 / 250.0};
 
   double tt{t0};
-  double dt{dtstart};
+  double dt{dtStart};
   arma::size_t Nstep{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
                      1};  // Number of steps
-  arma::vec y{arma::join_cols(theta0, arma::vec(Nin))};
-  arma::vec deltaCurrent(N + Nin);
-  ydata.insert_cols(0, y);
+  arma::vec y{arma::join_cols(initAngles, arma::vec(nInertia))};
+  arma::vec deltaCurrent(nNodes + nInertia);
+  yData.insert_cols(0, y);
   // ydata.insert_cols(0, y);
   t.insert_rows(0, arma::rowvec{tt});
   arma::sp_mat jac, ls;
   arma::vec k1, k2, k3, k4, f1, yscale;
   int tries{0};
   while (tt < tf) {
-    if (boxp) {
-      if (tt >= boxtime) {
-        p(boxix) -= boxpower;
-        boxp = false;
+    if (boxPer) {
+      if (tt >= boxTime) {
+        power(boxIx) -= boxPower;
+        boxPer = false;
       }
     }
     // ydata.col(i / se) = y;
     jac = df(y);
-    ls = arma::speye(N + Nin, N + Nin) / gam / dt - jac;
+    ls = arma::speye(nNodes + nInertia, nNodes + nInertia) / gam / dt - jac;
     f1 = f(y);
     yscale = eps * arma::abs(y) + eps;
     k1 = arma::spsolve(ls, f(y));
@@ -256,14 +338,15 @@ void Network::kaps_rentrop(double t0, double tf, double dtstart, double dtmax,
       y += b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4;
       tt += dt;
       dt = std::min(0.95 * std::pow(1.0 / error, 1.0 / 4.0) * dt,
-                    std::min(1.5 * dt, dtmax));
+                    std::min(1.5 * dt, dtMax));
       tries = 0;
       std::cout << std::fixed << std::setprecision(1)
                 << (tt - t0) / (tf - t0) * 100
                 << "%\nMax omega: " << std::setprecision(4)
-                << arma::max(arma::abs(y(arma::span(N, N + Nin - 1))))
+                << arma::max(
+                       arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
                 << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
-      ydata.insert_cols(ydata.n_cols, y);
+      yData.insert_cols(yData.n_cols, y);
       t.insert_rows(t.n_rows, arma::rowvec{tt});
     } else {
       dt = std::max(0.95 * std::pow(1.0 / error, 1.0 / 3.0) * dt, 0.5 * dt);
@@ -272,76 +355,103 @@ void Network::kaps_rentrop(double t0, double tf, double dtstart, double dtmax,
         break;
       }
       tries++;
-      if (tries == mtries) {
+      if (tries == maxTries) {
         std::cout << "Max tries reached!\n";
         break;
       }
     }
   }
-  ydata.insert_rows(ydata.n_rows, calculate_load_frequencies());
+  yData.insert_rows(yData.n_rows, calculateLoadFrequencies());
   std::cout << "Final max omega: "
-            << arma::max(arma::abs(y(arma::span(N, N + Nin - 1)))) << "\n";
+            << arma::max(
+                   arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+            << "\n";
 }
 
+/** Return function value.
+ * Returns the value of the swing equations for the given angles and
+ * frequencies. For a definition of the swing equations see, e.g., A. R. Bergen
+ * and V. Vittal, Power Systems Analysis, 2nd ed (Prentice Hall, Upper Saddle
+ * River, NJ, 2000).
+ * @param y Vector containing angles and frequencies
+ */
 arma::vec Network::f(arma::vec y) {
-  arma::vec re(N + Nin);
-  for (std::size_t i = 0; i < Nin; ++i) {
-    re(i) = y(N + i);
-    re(N + i) = p(i) - d(i) * y(N + i);
-    for (auto &j : al[i]) {
-      re(N + i) -= j.second * std::sin(y(i) - y(j.first));
+  arma::vec re(nNodes + nInertia);
+  for (std::size_t i = 0; i < nInertia; ++i) {
+    re(i) = y(nNodes + i);
+    re(nNodes + i) = power(i) - damping(i) * y(nNodes + i);
+    for (auto &j : adjacencyList[i]) {
+      re(nNodes + i) -= j.second * std::sin(y(i) - y(j.first));
     }
-    re(N + i) /= m(i);
+    re(nNodes + i) /= inertia(i);
   }
-  for (std::size_t i = Nin; i < N; ++i) {
-    re(i) = p(i);
-    for (auto &j : al[i]) {
+  for (std::size_t i = nInertia; i < nNodes; ++i) {
+    re(i) = power(i);
+    for (auto &j : adjacencyList[i]) {
       re(i) -= j.second * std::sin(y(i) - y(j.first));
     }
-    re(i) /= d(i);
+    re(i) /= damping(i);
   }
   return re;
 }
 
-// Calculate the Jacobian for specific values of theta
-// It is given by the following expression
-//┏                                                                         ┓
-//┃ 0(Nin x Nin)   0(Nin x Nno)   I(Nin x Nin)                              ┃
-//┃                                                                         ┃
-//┃ -D(Nno)^(-1)*L(Nno x Nin) -D(Nno)^(-1)*L(Nno x Nno) 0(Nno x Nin)        ┃
-//┃                                                                         ┃
-//┃ -M(Nno)^(-1)*L(Nin x Nin) -M(Nno)^(-1)*L(Nin x Nno) -M^(-1)*D(Nin xNin) ┃
-//┗                                                                         ┛
+/**
+ * Calculate the Jacobian for specific values of theta
+ *
+ * It is given by the following expression
+ *
+ * \f$\begin{bmatrix}
+ * 0_{N_{in} \times N_{in}} & 0_{N_{in} \times N_{in}} & 1_{N_{in} \times
+ * N_{in}} \\ -D_{no}^{-1} L_{no \times in} & -D_{no}^{-1} L_{no \times in}
+ * & 0_{no \times in}\\-M_{in}^{-1}L_{in \times in} & -M_{in}L_{in\times no}
+ * &-M_{in}^{-1} D_{in}\end{bmatrix}\f$
+ *
+ * For a more detailed explanation see, e.g,
+ * J. Fritzsch and P. Jacquod, IEEE Access 10, 19986 (2022).
+ *
+ * @param y Current function values
+ * @return The Jacobian of the system for the function value y
+ */
 arma::sp_mat Network::df(arma::vec &y) {
-  arma::sp_mat Lap(N, N);
-  for (std::vector<double>::size_type i = 0; i < N; ++i) {
-    for (auto &j : al[i]) {
+  arma::sp_mat Lap(nNodes, nNodes);
+  for (std::vector<double>::size_type i = 0; i < nNodes; ++i) {
+    for (auto &j : adjacencyList[i]) {
       Lap(i, j.first) = -j.second * std::cos(y(i) - y(j.first));
     }
   }
-  for (std::size_t i = 0; i < N; ++i) {
+  for (std::size_t i = 0; i < nNodes; ++i) {
     Lap(i, i) = -arma::sum(Lap.row(i));
   }
-  for (std::size_t i = 0; i < Nin; ++i) {
-    Lap.row(i) /= m(i);
+  for (std::size_t i = 0; i < nInertia; ++i) {
+    Lap.row(i) /= inertia(i);
   }
-  for (std::size_t i = Nin; i < N; ++i) {
-    Lap.row(i) /= d(i);
+  for (std::size_t i = nInertia; i < nNodes; ++i) {
+    Lap.row(i) /= damping(i);
   }
-  arma::sp_mat gamma(Nin, Nin);
-  gamma.diag() = -d.head_rows(Nin) / m.head_rows(Nin);
+  arma::sp_mat gamma(nInertia, nInertia);
+  gamma.diag() = -damping.head_rows(nInertia) / inertia.head_rows(nInertia);
   arma::sp_mat A = arma::join_cols(
-      arma::join_rows(arma::sp_mat(Nin, N), arma::speye(Nin, Nin)),
-      arma::join_rows(-Lap.tail_rows(N - Nin), arma::sp_mat(N - Nin, Nin)),
-      arma::join_rows(-Lap.head_rows(Nin), gamma));
+      arma::join_rows(arma::sp_mat(nInertia, nNodes),
+                      arma::speye(nInertia, nInertia)),
+      arma::join_rows(-Lap.tail_rows(nNodes - nInertia),
+                      arma::sp_mat(nNodes - nInertia, nInertia)),
+      arma::join_rows(-Lap.head_rows(nInertia), gamma));
   return A;
 }
 
-// Save the data for the type specified ("angles", "frequency") to path with
-// time included if time = true
-void Network::save_data(std::string path, std::string type, int se, bool time) {
-  arma::uvec ix(ydata.n_cols % se == 0 ? ydata.n_cols / se
-                                       : ydata.n_cols / se + 1);
+/**
+ * Save simulation data.
+ * Save the data for the type specified ("angles", "frequency") to the specified
+ * time including or excluding the time data.
+ * @param path Path and name of the file that should be written to
+ * @param type Whether to save frequencies or angles. Must be `"frequency"` or
+ * `"angles"`
+ * @param se Save every `se`th time step to reduce file size
+ * @param time Whether to include the time data. Recommened to leave true.
+ */
+void Network::saveData(std::string path, std::string type, int se, bool time) {
+  arma::uvec ix(yData.n_cols % se == 0 ? yData.n_cols / se
+                                       : yData.n_cols / se + 1);
   for (int i = 0; i < ix.n_elem; ++i) {
     ix(i) = i * se;
   }
@@ -349,73 +459,95 @@ void Network::save_data(std::string path, std::string type, int se, bool time) {
     if (time) {
       arma::mat tmp = arma::join_cols(arma::conv_to<arma::rowvec>::from(t),
                                       // ydata.rows(N, N + Nin - 1));
-                                      ydata.rows(N, 2 * N - 1));
+                                      yData.rows(nNodes, 2 * nNodes - 1));
       arma::conv_to<arma::mat>::from(tmp.cols(ix)).save(path, arma::csv_ascii);
     } else {
       arma::conv_to<arma::mat>::from(
-          ydata.submat(arma::linspace<arma::uvec>(N, 2 * N - 1), ix))
+          yData.submat(arma::linspace<arma::uvec>(nNodes, 2 * nNodes - 1), ix))
           .save(path, arma::csv_ascii);
     }
   } else if (type.compare("angles") == 0) {
     if (time) {
       arma::mat tmp = arma::join_cols(arma::conv_to<arma::rowvec>::from(t),
-                                      ydata.rows(0, N - 1));
+                                      yData.rows(0, nNodes - 1));
       arma::conv_to<arma::mat>::from(tmp.cols(ix)).save(path, arma::csv_ascii);
     } else {
       arma::conv_to<arma::mat>::from(
-          ydata.submat(arma::linspace<arma::uvec>(0, N - 1), ix))
+          yData.submat(arma::linspace<arma::uvec>(0, nNodes - 1), ix))
           .save(path, arma::csv_ascii);
     }
   }
 }
 
-// Calculate the frequencies of the load buses with a second order approximation
-// of the derivative
-arma::mat Network::calculate_load_frequencies() {
-  arma::mat re(N - Nin, ydata.n_cols);
-  arma::span ix{arma::span(Nin, N - 1)};
-  std::size_t NN{ydata.n_cols};
+/**
+ * Calculate the frequencies of the load buses.
+ * A second order approximation of the derivative is used. To obtain the values
+ * for an unevenly spaced grid the algorithm described in B. Fornberg, Math.
+ * Comp. 51, 699 (1988). is implemented.
+ */
+arma::mat Network::calculateLoadFrequencies() {
+  arma::mat re(nNodes - nInertia, yData.n_cols);
+  arma::span ix{arma::span(nInertia, nNodes - 1)};
+  std::size_t NN{yData.n_cols};
   re.col(0) = ((2 * t(0) - t(1) - t(2)) / ((t(1) - t(0)) * (t(2) - t(0))) *
-                   ydata(ix, 0) +
-               (t(2) - t(0)) / ((t(1) - t(0)) * (t(2) - t(1))) * ydata(ix, 1) -
-               (t(1) - t(0)) / ((t(2) - t(0)) * (t(2) - t(1))) * ydata(ix, 2));
+                   yData(ix, 0) +
+               (t(2) - t(0)) / ((t(1) - t(0)) * (t(2) - t(1))) * yData(ix, 1) -
+               (t(1) - t(0)) / ((t(2) - t(0)) * (t(2) - t(1))) * yData(ix, 2));
   re.col(NN - 1) = ((2 * t(NN - 1) - t(NN - 2) - t(NN - 3)) /
                         ((t(NN - 1) - t(NN - 3)) * (t(NN - 1) - t(NN - 2))) *
-                        ydata(ix, NN - 1) -
+                        yData(ix, NN - 1) -
                     (t(NN - 1) - t(NN - 3)) /
                         ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 2))) *
-                        ydata(ix, NN - 2) +
+                        yData(ix, NN - 2) +
                     (t(NN - 1) - t(NN - 2)) /
                         ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 3))) *
-                        ydata(ix, NN - 3));
+                        yData(ix, NN - 3));
   for (std::size_t i = 1; i < NN - 1; ++i) {
     re.col(i) =
         ((t(i) - t(i + 1)) / ((t(i) - t(i - 1)) * (t(i + 1) - t(i - 1))) *
-             ydata(ix, i - 1) +
-         (1 / (t(i) - t(i - 1)) - 1 / (t(i + 1) - t(i))) * ydata(ix, i) +
+             yData(ix, i - 1) +
+         (1 / (t(i) - t(i - 1)) - 1 / (t(i + 1) - t(i))) * yData(ix, i) +
          (t(i) - t(i - 1)) / ((t(i + 1) - t(i - 1)) * (t(i + 1) - t(i))) *
-             ydata(ix, i + 1));
+             yData(ix, i + 1));
   }
   return re;
 }
 
-void Network::plot_results(std::string type) {
+/**
+ * Plot results of dynamical simulations.
+ * Plot all variables of the given type. Not recommended for large networks as
+ * the GNUplot pipeline is extremely slows.
+ * @param type Whether to plot frequencies or angles. Must be `"frequency"` or
+ * `"angles"`
+ */
+void Network::plotResults(std::string type) {
   if (type.compare("frequency") == 0) {
     std::vector<std::vector<double>> tmp;
-    for (int i = 0; i < N; ++i) {
-      tmp.push_back(arma::conv_to<std::vector<double>>::from(ydata.row(i + N)));
+    for (int i = 0; i < nNodes; ++i) {
+      tmp.push_back(
+          arma::conv_to<std::vector<double>>::from(yData.row(i + nNodes)));
     }
     matplot::plot(t, tmp, "k");
   } else if (type.compare("angles") == 0) {
     std::vector<std::vector<double>> tmp;
-    for (int i = 0; i < N; ++i) {
-      tmp.push_back(arma::conv_to<std::vector<double>>::from(ydata.row(i)));
+    for (int i = 0; i < nNodes; ++i) {
+      tmp.push_back(arma::conv_to<std::vector<double>>::from(yData.row(i)));
     }
     matplot::plot(t, tmp, "k");
   }
 }
 
-void Network::plot_results(std::string areafile, std::string type) {
+/**
+ * Plot results of dynamical simulations divided into areas.
+ * Plot all variables of the given type divided into given areas. The plot
+ * consists of a subplot for each area with 2 pots per row. Not recommended for
+ * large networks as the GNUplot pipeline is extremely slows.
+ * @param areafile File containing the different areas. It must contain the
+ * nodes in one area on one line separated by spaces.
+ * @param type Whether to plot frequencies or angles. Must be `"frequency"` or
+ * `"angles"`
+ */
+void Network::plotResults(std::string areafile, std::string type) {
   assert(std::filesystem::exists(areafile));
   std::ifstream areain{areafile};
   std::vector<std::vector<std::size_t>> areas;
@@ -430,8 +562,8 @@ void Network::plot_results(std::string areafile, std::string type) {
     areas.push_back(tmp);
   }
   int se{static_cast<int>(round(0.05 / (t[1] - t[0])))};
-  arma::uvec ix(ydata.n_cols % se == 0 ? ydata.n_cols / se
-                                       : ydata.n_cols / se + 1);
+  arma::uvec ix(yData.n_cols % se == 0 ? yData.n_cols / se
+                                       : yData.n_cols / se + 1);
   for (int i = 0; i < ix.n_elem; ++i) {
     ix(i) = i * se;
   }
@@ -440,7 +572,7 @@ void Network::plot_results(std::string areafile, std::string type) {
     std::vector<std::vector<double>> tmp;
     for (auto &j : areas[i]) {
       tmp.push_back(arma::conv_to<std::vector<double>>::from(
-          ydata.submat(arma::uvec{j + N}, ix)));
+          yData.submat(arma::uvec{j + nNodes}, ix)));
     }
     matplot::subplot(n_rows, 2, i);
     matplot::plot(arma::conv_to<arma::vec>::from(t.rows(ix)), tmp, "k");
