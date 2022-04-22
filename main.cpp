@@ -15,13 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <matplot/matplot.h>
+
 #include <armadillo>
 #include <iostream>
 #include <string>
-#include <matplot/matplot.h>
 
-#include "include/network.hpp"
 #include "ProjectConfig.hpp"
+#include "include/network.hpp"
 
 int main(int argv, char **argc) {
   if (argv == 2) {
@@ -34,12 +35,28 @@ int main(int argv, char **argc) {
   std::string adjlist = std::string(SOURCE_DIR) + "/data/adjlist.csv";
   std::string coeffs = std::string(SOURCE_DIR) + "/data/coeffs.csv";
   std::string angles = std::string(SOURCE_DIR) + "/data/syncedangles.csv";
-  net::Network test{adjlist, coeffs, angles};
-  test.step(419, -9.0);
-  // test.box(419, -9.0, 10);
-  test.kapsRentrop(0, 20, 1.0e-2);
-  test.saveData("testrk.csv", "frequency", 1);
-  test.saveData("testrka.csv", "angles", 1);
+
+  std::vector<std::pair<double, std::string>> scaling{
+      {0.01, "0.01"}, {0.05, "0.05"}, {0.1, "0.1"}, {0.5, "0.5"},
+      {1, "1"},       {5, "5"},       {10, "10"}};
+
+  for (auto &i : scaling) {
+    std::cout << i.second << '\n';
+    net::Network tmp{adjlist, coeffs, angles};
+    tmp.step(419, -9.0);
+    tmp.scaleParameters(i.first, "damping");
+    tmp.dynamicalSimulation(0, 40);
+    tmp.saveData("damping" + i.second + ".csv", "frequency");
+  }
+
+  for (auto &i : scaling) {
+    std::cout << i.second << '\n';
+    net::Network tmp{adjlist, coeffs, angles};
+    tmp.step(419, -9.0);
+    tmp.scaleParameters(i.first, "inertia");
+    tmp.dynamicalSimulation(0, 40);
+    tmp.saveData("inertia" + i.second + ".csv", "frequency");
+  }
 
   return 0;
 }

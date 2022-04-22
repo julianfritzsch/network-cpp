@@ -52,6 +52,7 @@ class Network {
   void plotResults(std::string areafile, std::string type = "frequency");
   void kapsRentrop(double t0, double tf, double dtStart = 5.0e-3,
                    double dtMax = 1e-1, double eps = 1.0e-3, int maxTries = 40);
+  void scaleParameters(double factor, std::string type);
 
  private:
   void createAdjlist(std::string adjlist);

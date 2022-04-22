@@ -546,6 +546,21 @@ arma::mat Network::calculateLoadFrequencies() {
 }
 
 /**
+ * Scale dynamical parameters.
+ * Multiply the specified dynamical parameters by the given factor.
+ * @param factor The value by which the parameters are multiplied
+ * @param type Which parameters to scale. Must be `"inertia"` or `"inertia"`
+ * @todo Allow to specify single machines
+ */
+void Network::scaleParameters(double factor, std::string type) {
+  if (type.compare("damping") == 0) {
+    damping *= factor;
+  } else if (type.compare("inertia") == 0) {
+    inertia *= factor;
+  }
+}
+
+/**
  * Plot results of dynamical simulations.
  * Plot all variables of the given type. Not recommended for large networks as
  * the GNUplot pipeline is extremely slows.

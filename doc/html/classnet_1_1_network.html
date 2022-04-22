@@ -109,6 +109,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a138cd8c992b65548f639e1f41e39c3b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a138cd8c992b65548f639e1f41e39c3b9">kapsRentrop</a> (double t0, double tf, double dtStart=5.0e-3, double dtMax=1e-1, double eps=1.0e-3, int maxTries=40)</td></tr>
 <tr class="memdesc:a138cd8c992b65548f639e1f41e39c3b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a dynamical simulation.  <a href="classnet_1_1_network.html#a138cd8c992b65548f639e1f41e39c3b9">More...</a><br /></td></tr>
 <tr class="separator:a138cd8c992b65548f639e1f41e39c3b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74b5805bea8212fd55654d45ee40fa7f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a74b5805bea8212fd55654d45ee40fa7f">scaleParameters</a> (double factor, std::string type)</td></tr>
+<tr class="memdesc:a74b5805bea8212fd55654d45ee40fa7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scale dynamical parameters.  <a href="classnet_1_1_network.html#a74b5805bea8212fd55654d45ee40fa7f">More...</a><br /></td></tr>
+<tr class="separator:a74b5805bea8212fd55654d45ee40fa7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pri-methods" name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
@@ -190,7 +193,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>boxTime</b></td></t
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Simulate electrical power networks. </p>
-<p >Create an electric power network from an adjacency list and a list of coefficients. Functionality to create various faults such as step and box perturbations and noisy fluctuations (to be implemented). The dynamic behavior can be simulated using various numerical methods and the results exported to a file. Also provides basic plotting functionality. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd><p class="startdd">Add possibility to use noise as perturbation </p>
+<p >Create an electric power network from an adjacency list and a list of coefficients. Functionality to create various faults such as step and box perturbations and noisy fluctuations (to be implemented). The dynamic behavior can be simulated using various numerical methods and the results exported to a file. Also provides basic plotting functionality. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd><p class="startdd">Add possibility to use noise as perturbation </p>
 <p class="enddd">Add possibility to scale parameters </p>
 </dd></dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
@@ -720,6 +723,44 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>boxTime</b></td></t
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a74b5805bea8212fd55654d45ee40fa7f" name="a74b5805bea8212fd55654d45ee40fa7f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74b5805bea8212fd55654d45ee40fa7f">&#9670;&nbsp;</a></span>scaleParameters()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void net::Network::scaleParameters </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>factor</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string&#160;</td>
+          <td class="paramname"><em>type</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Scale dynamical parameters. </p>
+<p >Multiply the specified dynamical parameters by the given factor. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">factor</td><td>The value by which the parameters are multiplied </td></tr>
+    <tr><td class="paramname">type</td><td>Which parameters to scale. Must be <code>"inertia"</code> or <code>"inertia"</code> </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>Allow to specify single machines </dd></dl>
 
 </div>
 </div>
