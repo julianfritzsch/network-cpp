@@ -1,4 +1,6 @@
 .ccls-cache/
+.history/
+.vscode/
 .cache/
 .clang-format
 release/

@@ -61,12 +61,13 @@ Network::Network(std::string adjlist, std::string coeffs, std::string angles) {
  */
 void Network::createAdjlist(std::string adjlist) {
   assert(std::filesystem::exists(adjlist));
+  // Create necessary temporary variables and read file into vectors
   std::ifstream adjinput(adjlist);
   std::string line;
-  std::vector<double>::size_type startnode{}, endnode{};
-  double lineweight{};
-  int colindex{};
-  double tempin{};
+  std::size_t startnode, endnode;
+  double lineweight;
+  int colindex;
+  double tempin;
   while (getline(adjinput, line)) {
     std::stringstream ss(line);
     colindex = 0;
@@ -116,9 +117,9 @@ void Network::createCoeffLists(std::string coeffs) {
   // Read file into respective vectors
   std::ifstream coeffin(coeffs);
   std::string line;
-  int colindex{};
-  double tempin{};
-  std::size_t gen{};
+  int colindex;
+  double tempin;
+  std::size_t gen;
   while (getline(coeffin, line)) {
     colindex = 0;
     std::stringstream ss(line);
@@ -200,7 +201,8 @@ void Network::box(std::size_t node, double powerChange, double time) {
  * mid-point method.
  * This method is extremely fast as it only requires a single inversion of the
  * Jacobian but might lead to a small zick-zack behavior. This functions sets
- * the values of Network::t and Network::yData.
+ * the values of Network::t and Network::yData. A description of the algorithm
+ * is given in G. Bader and P. Deuflhard, Numer. Math. 41, 373 (1983).
  * @param t0 Start time
  * @param tf Finish time
  * @param dt Time step
@@ -211,15 +213,20 @@ void Network::box(std::size_t node, double powerChange, double time) {
  */
 void Network::dynamicalSimulation(double t0, double tf, double dt, int se) {
   double tt{t0};
-  arma::size_t Nstep{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
-                     1};  // Number of steps
-  arma::size_t saveN{Nstep % se == 0 ? Nstep / se : Nstep / se + 1};
+  // Calculate number of steps and number of points saved
+  arma::size_t nSteps{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
+                      1};
+  arma::size_t saveN{nSteps % se == 0 ? nSteps / se : nSteps / se + 1};
+
+  // Setup initial conditions
   arma::vec y{arma::join_cols(initAngles, arma::vec(nInertia))};
   t = arma::vec(saveN);
   yData = arma::mat(nNodes + nInertia, saveN);
   yData.col(0) = y;
   arma::vec deltaCurrent(nNodes + nInertia);
   t(0) = tt;
+
+  // Do first step
   arma::mat toinv =
       arma::eye(nNodes + nInertia, nNodes + nInertia) - dt * arma::mat(df(y));
   arma::mat inv = arma::inv(toinv);
@@ -227,7 +234,9 @@ void Network::dynamicalSimulation(double t0, double tf, double dt, int se) {
   y += deltaCurrent;
   tt += dt;
 
-  for (int i = 1; i < Nstep - 1; ++i) {
+  // Main loop
+  for (int i = 1; i < nSteps - 1; ++i) {
+    // Create box perturbation
     if (boxPer) {
       if (tt >= boxTime) {
         power(boxIx) -= boxPower;
@@ -235,6 +244,7 @@ void Network::dynamicalSimulation(double t0, double tf, double dt, int se) {
       }
     }
     if (i % se == 0) {
+      // Save data and print some useful information
       std::cout << std::fixed << std::setprecision(1)
                 << (tt - t0) / (tf - t0) * 100
                 << "%\nMax omega: " << std::setprecision(4)
@@ -248,12 +258,16 @@ void Network::dynamicalSimulation(double t0, double tf, double dt, int se) {
     y += deltaCurrent;
     tt += dt;
   }
-  if ((Nstep - 1) % se == 0) {
+
+  // Do special smoothing step only if the last data point is saved
+  if ((nSteps - 1) % se == 0) {
     deltaCurrent = inv * (dt * f(y) - deltaCurrent);
     y += deltaCurrent;
     t(saveN - 1) = tt;
     yData.col(saveN - 1) = y;
   }
+
+  // Insert the load frequencies
   yData.insert_rows(yData.n_rows, calculateLoadFrequencies());
   std::cout << "Final max omega: "
             << arma::max(
@@ -265,7 +279,10 @@ void Network::dynamicalSimulation(double t0, double tf, double dt, int se) {
  * Run a dynamical simulation.
  * Run a dynamical simulation using the fourth order Kaps-Rentrop method with
  * adaptive stepsize. This method is more precise and stable but considerably
- * slower as it require 4 linear systems to be solved at every step.
+ * slower as it require 4 linear systems to be solved at every step. For a
+ * description of the algorithm and the different constants see J. R. Winkler,
+ * Endeavour 17, 201 (1993). This functions sets the values of Network::t and
+ * Network::yData.
  * @param t0 Start time
  * @param tf Finish time
  * @param dtStart First time step
@@ -275,7 +292,8 @@ void Network::dynamicalSimulation(double t0, double tf, double dt, int se) {
  * @param maxTries Maximum allowed tries for one step. The method will abort if
  * maxTries is reached.
  * @todo Use a different solver to directly obtain LU-decomposition to only do
- * it once per step
+ * it once per step, that might require rewriting this library using Eigen
+ * @todo Change data storage to avoid constant reallocations
  */
 void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
                           double eps, int maxTries) {
@@ -303,35 +321,42 @@ void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
   const double c3x{121.0 / 50.0};
   const double c4x{29.0 / 250.0};
 
+  // Setup initial values
   double tt{t0};
   double dt{dtStart};
-  arma::size_t Nstep{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
-                     1};  // Number of steps
   arma::vec y{arma::join_cols(initAngles, arma::vec(nInertia))};
-  arma::vec deltaCurrent(nNodes + nInertia);
   yData.insert_cols(0, y);
-  // ydata.insert_cols(0, y);
   t.insert_rows(0, arma::rowvec{tt});
-  arma::sp_mat jac, ls;
-  arma::vec k1, k2, k3, k4, f1, yscale;
+
+  // Create needed arrays
+  arma::sp_mat jacobian, leftSide;
+  arma::vec k1, k2, k3, k4, yscale;
   int tries{0};
+
+  // Main loop
   while (tt < tf) {
+    // Create box perturbation
     if (boxPer) {
       if (tt >= boxTime) {
         power(boxIx) -= boxPower;
         boxPer = false;
       }
     }
-    // ydata.col(i / se) = y;
-    jac = df(y);
-    ls = arma::speye(nNodes + nInertia, nNodes + nInertia) / gam / dt - jac;
-    f1 = f(y);
+
+    // Do one step
+    jacobian = df(y);
+    leftSide =
+        arma::speye(nNodes + nInertia, nNodes + nInertia) / gam / dt - jacobian;
     yscale = eps * arma::abs(y) + eps;
-    k1 = arma::spsolve(ls, f(y));
-    k2 = arma::spsolve(ls, f(y + a21 * k1) + c21 * k1 / dt);
+    k1 = arma::spsolve(leftSide, f(y));
+    k2 = arma::spsolve(leftSide, f(y + a21 * k1) + c21 * k1 / dt);
     arma::vec f34 = f(y + a31 * k1 + a32 * k2);
-    k3 = arma::spsolve(ls, f34 + c31 * k1 / dt + c32 * k2 / dt);
-    k4 = arma::spsolve(ls, f34 + c41 * k1 / dt + c42 * k2 / dt + c43 * k3 / dt);
+    k3 = arma::spsolve(leftSide, f34 + c31 * k1 / dt + c32 * k2 / dt);
+    k4 = arma::spsolve(leftSide,
+                       f34 + c41 * k1 / dt + c42 * k2 / dt + c43 * k3 / dt);
+
+    // Error calculation. If error < 1 save data and increase step size, else
+    // decrease and redo step
     arma::vec err = e1 * k1 + e2 * k2 + e3 * k3 + e4 * k4;
     double error = arma::max(arma::abs(err / yscale));
     if (error < 1) {
@@ -340,14 +365,15 @@ void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
       dt = std::min(0.95 * std::pow(1.0 / error, 1.0 / 4.0) * dt,
                     std::min(1.5 * dt, dtMax));
       tries = 0;
+      yData.insert_cols(yData.n_cols, y);
+      t.insert_rows(t.n_rows, arma::rowvec{tt});
+      // Print some useful information
       std::cout << std::fixed << std::setprecision(1)
                 << (tt - t0) / (tf - t0) * 100
                 << "%\nMax omega: " << std::setprecision(4)
                 << arma::max(
                        arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
                 << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
-      yData.insert_cols(yData.n_cols, y);
-      t.insert_rows(t.n_rows, arma::rowvec{tt});
     } else {
       dt = std::max(0.95 * std::pow(1.0 / error, 1.0 / 3.0) * dt, 0.5 * dt);
       if (dt < 1.0e-5) {
@@ -361,6 +387,8 @@ void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
       }
     }
   }
+
+  // Insert load frequency data
   yData.insert_rows(yData.n_rows, calculateLoadFrequencies());
   std::cout << "Final max omega: "
             << arma::max(
@@ -489,6 +517,8 @@ arma::mat Network::calculateLoadFrequencies() {
   arma::mat re(nNodes - nInertia, yData.n_cols);
   arma::span ix{arma::span(nInertia, nNodes - 1)};
   std::size_t NN{yData.n_cols};
+
+  // For the edge cases use a forward / backward differences method
   re.col(0) = ((2 * t(0) - t(1) - t(2)) / ((t(1) - t(0)) * (t(2) - t(0))) *
                    yData(ix, 0) +
                (t(2) - t(0)) / ((t(1) - t(0)) * (t(2) - t(1))) * yData(ix, 1) -
@@ -502,6 +532,8 @@ arma::mat Network::calculateLoadFrequencies() {
                     (t(NN - 1) - t(NN - 2)) /
                         ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 3))) *
                         yData(ix, NN - 3));
+
+  // For the central points use cenetered differences method
   for (std::size_t i = 1; i < NN - 1; ++i) {
     re.col(i) =
         ((t(i) - t(i + 1)) / ((t(i) - t(i - 1)) * (t(i + 1) - t(i - 1))) *
@@ -561,6 +593,8 @@ void Network::plotResults(std::string areafile, std::string type) {
     }
     areas.push_back(tmp);
   }
+
+  // only plot a point every 0.05 seconds
   int se{static_cast<int>(round(0.05 / (t[1] - t[0])))};
   arma::uvec ix(yData.n_cols % se == 0 ? yData.n_cols / se
                                        : yData.n_cols / se + 1);

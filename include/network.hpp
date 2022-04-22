@@ -34,6 +34,8 @@ namespace net {
  * implemented). The dynamic behavior can be simulated using various numerical
  * methods and the results exported to a file. Also provides basic plotting
  * functionality.
+ * @todo Add possibility to use noise as perturbation
+ * @todo Add possibility to scale parameters
  */
 class Network {
  public:

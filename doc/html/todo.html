@@ -66,12 +66,20 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><dl class="reflist">
+<dt>Class <a class="el" href="classnet_1_1_network.html">net::Network</a>  </dt>
+<dd><p class="startdd"><a class="anchor" id="_todo000004"></a>Add possibility to use noise as perturbation </p>
+<p class="interdd"></p>
+<p class="enddd">Add possibility to scale parameters  </p>
+</dd>
 <dt>Member <a class="el" href="classnet_1_1_network.html#a3761d997f765431b6cf11c42c25045e1">net::Network::createCoeffLists</a>  (std::string coeffs)</dt>
 <dd><a class="anchor" id="_todo000001"></a>Allow for arbitrarily ordered inertia-full and inertia-less nodes.  </dd>
 <dt>Member <a class="el" href="classnet_1_1_network.html#a7000656cb0c0abddadff1650451c7834">net::Network::dynamicalSimulation</a>  (double t0, double tf, double dt=5.0e-3, int se=1)</dt>
 <dd><a class="anchor" id="_todo000002"></a>This functions should be refactored to be an interface that allows different methods to be chosen.  </dd>
 <dt>Member <a class="el" href="classnet_1_1_network.html#a138cd8c992b65548f639e1f41e39c3b9">net::Network::kapsRentrop</a>  (double t0, double tf, double dtStart=5.0e-3, double dtMax=1e-1, double eps=1.0e-3, int maxTries=40)</dt>
-<dd><a class="anchor" id="_todo000003"></a>Use a different solver to directly obtain LU-decomposition to only do it once per step </dd>
+<dd><p class="startdd"><a class="anchor" id="_todo000003"></a>Use a different solver to directly obtain LU-decomposition to only do it once per step, that might require rewriting this library using Eigen </p>
+<p class="interdd"></p>
+<p class="enddd">Change data storage to avoid constant reallocations </p>
+</dd>
 </dl>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

@@ -1,5 +1,2 @@
-\_form#0=33x31:$\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}$
-\_form#1=120x16:$\begin{bmatrix} 0_{N_in \times N_in} & 0_{N_in \times N_in} \end{bmatrix}$
-\_form#2=180x16:$\begin{bmatrix} 0_{N_{in} \times N_{in}} & 0_{N_{in} \times N_{in}} & 1_{N_{in} \times N_{in}} \end{bmatrix}$
-\_form#3=236x45:$\begin{bmatrix} 0_{N_{in} \times N_{in}} & 0_{N_{in} \times N_{in}} & 1_{N_{in} \times N_{in}} \\ -D_{no}^{-1} L_{no \times in} & -D_{no}^{-1} L_{no \times in} & 0_{no \times in}\\-M_{in}^{-1}L_{in \times in} & -M_{in}L_{in\times no} &-M_{in}^{-1} D_{in}\end{bmatrix}$
-\_form#4=78x11:$\text{error} < \varepsilon y + \varepsilon$
+\_form#0=78x11:$\text{error} < \varepsilon y + \varepsilon$
+\_form#1=236x45:$\begin{bmatrix} 0_{N_{in} \times N_{in}} & 0_{N_{in} \times N_{in}} & 1_{N_{in} \times N_{in}} \\ -D_{no}^{-1} L_{no \times in} & -D_{no}^{-1} L_{no \times in} & 0_{no \times in}\\-M_{in}^{-1}L_{in \times in} & -M_{in}L_{in\times no} &-M_{in}^{-1} D_{in}\end{bmatrix}$

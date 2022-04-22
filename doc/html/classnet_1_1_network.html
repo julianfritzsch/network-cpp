@@ -190,7 +190,9 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>boxTime</b></td></t
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Simulate electrical power networks. </p>
-<p >Create an electric power network from an adjacency list and a list of coefficients. Functionality to create various faults such as step and box perturbations and noisy fluctuations (to be implemented). The dynamic behavior can be simulated using various numerical methods and the results exported to a file. Also provides basic plotting functionality. </p>
+<p >Create an electric power network from an adjacency list and a list of coefficients. Functionality to create various faults such as step and box perturbations and noisy fluctuations (to be implemented). The dynamic behavior can be simulated using various numerical methods and the results exported to a file. Also provides basic plotting functionality. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd><p class="startdd">Add possibility to use noise as perturbation </p>
+<p class="enddd">Add possibility to scale parameters </p>
+</dd></dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a19dd5f759c437e719f7537ee4e6acb5a" name="a19dd5f759c437e719f7537ee4e6acb5a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a19dd5f759c437e719f7537ee4e6acb5a">&#9670;&nbsp;</a></span>Network() <span class="overload">[1/2]</span></h2>
@@ -441,7 +443,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>boxTime</b></td></t
 
 <p>Calculate the Jacobian for specific values of theta. </p>
 <p >It is given by the following expression</p>
-<p ><img class="formulaInl" alt="$\begin{bmatrix} 0_{N_{in} \times N_{in}} &amp; 0_{N_{in} \times N_{in}} &amp; 1_{N_{in} \times N_{in}} \\ -D_{no}^{-1} L_{no \times in} &amp; -D_{no}^{-1} L_{no \times in} &amp; 0_{no \times in}\\-M_{in}^{-1}L_{in \times in} &amp; -M_{in}L_{in\times no} &amp;-M_{in}^{-1} D_{in}\end{bmatrix}$" src="form_3.png" width="236" height="45"/></p>
+<p ><img class="formulaInl" alt="$\begin{bmatrix} 0_{N_{in} \times N_{in}} &amp; 0_{N_{in} \times N_{in}} &amp; 1_{N_{in} \times N_{in}} \\ -D_{no}^{-1} L_{no \times in} &amp; -D_{no}^{-1} L_{no \times in} &amp; 0_{no \times in}\\-M_{in}^{-1}L_{in \times in} &amp; -M_{in}L_{in\times no} &amp;-M_{in}^{-1} D_{in}\end{bmatrix}$" src="form_1.png" width="236" height="45"/></p>
 <p >For a more detailed explanation see, e.g, J. Fritzsch and P. Jacquod, IEEE Access 10, 19986 (2022).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -492,7 +494,7 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>boxTime</b></td></t
 </div><div class="memdoc">
 
 <p>Run a dynamical simulation. </p>
-<p >Do a dynamical simulation of the swing equations using a semi-implicit mid-point method. This method is extremely fast as it only requires a single inversion of the Jacobian but might lead to a small zick-zack behavior. This functions sets the values of <a class="el" href="classnet_1_1_network.html#aeed5841bc5258a127debc735487e1b8d" title="Vector containing time stamps after a dynamical simulation.">Network::t</a> and <a class="el" href="classnet_1_1_network.html#a251a86b1746604f22bc3d6bae9a8e3b6" title="Angle and frequency data.">Network::yData</a>. </p><dl class="params"><dt>Parameters</dt><dd>
+<p >Do a dynamical simulation of the swing equations using a semi-implicit mid-point method. This method is extremely fast as it only requires a single inversion of the Jacobian but might lead to a small zick-zack behavior. This functions sets the values of <a class="el" href="classnet_1_1_network.html#aeed5841bc5258a127debc735487e1b8d" title="Vector containing time stamps after a dynamical simulation.">Network::t</a> and <a class="el" href="classnet_1_1_network.html#a251a86b1746604f22bc3d6bae9a8e3b6" title="Angle and frequency data.">Network::yData</a>. A description of the algorithm is given in G. Bader and P. Deuflhard, Numer. Math. 41, 373 (1983). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">t0</td><td>Start time </td></tr>
     <tr><td class="paramname">tf</td><td>Finish time </td></tr>
@@ -590,18 +592,20 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>boxTime</b></td></t
 </div><div class="memdoc">
 
 <p>Run a dynamical simulation. </p>
-<p >Run a dynamical simulation using the fourth order Kaps-Rentrop method with adaptive stepsize. This method is more precise and stable but considerably slower as it require 4 linear systems to be solved at every step. </p><dl class="params"><dt>Parameters</dt><dd>
+<p >Run a dynamical simulation using the fourth order Kaps-Rentrop method with adaptive stepsize. This method is more precise and stable but considerably slower as it require 4 linear systems to be solved at every step. For a description of the algorithm and the different constants see J. R. Winkler, Endeavour 17, 201 (1993). This functions sets the values of <a class="el" href="classnet_1_1_network.html#aeed5841bc5258a127debc735487e1b8d" title="Vector containing time stamps after a dynamical simulation.">Network::t</a> and <a class="el" href="classnet_1_1_network.html#a251a86b1746604f22bc3d6bae9a8e3b6" title="Angle and frequency data.">Network::yData</a>. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">t0</td><td>Start time </td></tr>
     <tr><td class="paramname">tf</td><td>Finish time </td></tr>
     <tr><td class="paramname">dtStart</td><td>First time step </td></tr>
     <tr><td class="paramname">dtMax</td><td>Maximum allowed time step </td></tr>
-    <tr><td class="paramname">eps</td><td>Maximum allowed error at each step. <img class="formulaInl" alt="$\text{error} &lt; \varepsilon y + \varepsilon$" src="form_4.png" width="78" height="11"/> </td></tr>
+    <tr><td class="paramname">eps</td><td>Maximum allowed error at each step. <img class="formulaInl" alt="$\text{error} &lt; \varepsilon y + \varepsilon$" src="form_0.png" width="78" height="11"/> </td></tr>
     <tr><td class="paramname">maxTries</td><td>Maximum allowed tries for one step. The method will abort if maxTries is reached. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>Use a different solver to directly obtain LU-decomposition to only do it once per step </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd><p class="startdd">Use a different solver to directly obtain LU-decomposition to only do it once per step, that might require rewriting this library using Eigen </p>
+<p class="enddd">Change data storage to avoid constant reallocations </p>
+</dd></dl>
 
 </div>
 </div>
