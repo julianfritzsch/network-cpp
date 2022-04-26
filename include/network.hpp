@@ -44,14 +44,14 @@ class Network {
   Network(std::string adjlist, std::string coeffs, std::string angles);
   void step(std::size_t node, double powerChange);
   void box(std::size_t node, double powerChange, double time);
-  void dynamicalSimulation(double t0, double tf, double dt = 5.0e-3,
-                           int se = 1);
+  void dynamicalSimulation(double t0, double tf,
+                           std::string method = "midpoint", double dt = 5.0e-3,
+                           double dtMax = 1e-1, double eps = 1.0e-3,
+                           int maxTries = 40);
   void saveData(std::string path, std::string type = "frequency", int se = 10,
                 bool time = true);
   void plotResults(std::string type = "frequency");
   void plotResults(std::string areafile, std::string type = "frequency");
-  void kapsRentrop(double t0, double tf, double dtStart = 5.0e-3,
-                   double dtMax = 1e-1, double eps = 1.0e-3, int maxTries = 40);
   void scaleParameters(double factor, std::string type);
 
  private:
@@ -62,6 +62,9 @@ class Network {
   arma::mat calculateLoadFrequencies();
   arma::vec f(arma::vec y);
   arma::sp_mat df(arma::vec& y);
+  void midpoint(double t0, double tf, double dt = 5.0e-3);
+  void kapsRentrop(double t0, double tf, double dtStart = 5.0e-3,
+                   double dtMax = 1e-1, double eps = 1.0e-3, int maxTries = 40);
 
   // Data members
   /**

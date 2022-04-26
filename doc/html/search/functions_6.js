@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['plotresults_0',['plotResults',['../classnet_1_1_network.html#aaff237cb337f7092ddb2f9ccc9cc9fa4',1,'net::Network::plotResults(std::string type=&quot;frequency&quot;)'],['../classnet_1_1_network.html#aa0a5e38e713f159a45c5f80f3ef7f57e',1,'net::Network::plotResults(std::string areafile, std::string type=&quot;frequency&quot;)']]]
+  ['network_0',['Network',['../classnet_1_1_network.html#a19dd5f759c437e719f7537ee4e6acb5a',1,'net::Network::Network(std::string adjlist, std::string coeffs)'],['../classnet_1_1_network.html#ab6bc03afc45dc9504e6896946883b5a3',1,'net::Network::Network(std::string adjlist, std::string coeffs, std::string angles)']]]
 ];

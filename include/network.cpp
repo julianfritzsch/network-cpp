@@ -197,31 +197,54 @@ void Network::box(std::size_t node, double powerChange, double time) {
 
 /**
  * Run a dynamical simulation.
+ * The method used has to be specified by `method`. At the moment it can be
+ * chosen between a semi-implicit mid-point method or a fourth order
+ * Kaps-Rentrop method with adaptive step size.
+ * @param t0 Start time
+ * @param tf Finish time
+ * @param method Must be `"midpoint"` or `"kapsrentrop"`
+ * @param dt Time step for the semi-implicit method, starting time step for the
+ * Kaps-Rentrop methdod
+ * @param dtMax Maximum time step for the Kaps-Rentrop method
+ * @param eps Error scaling for the Kaps-Rentrop method
+ * @param maxTries Maximum amount of tries for a single step for the
+ * Kaps-Rentrop method
+ */
+void Network::dynamicalSimulation(double t0, double tf, std::string method,
+                                  double dt, double dtMax, double eps,
+                                  int maxTries) {
+  if (method == "midpoint") {
+    midpoint(t0, tf, dt);
+  } else if (method == "kapsrentrop") {
+    kapsRentrop(t0, tf, dt, dtMax, eps, maxTries);
+  } else {
+    std::cout << "Method not found. Must be \"midpoint\" or \"kapsrentrop\".\n";
+  }
+}
+
+/**
+ * Run a dynamical simulation.
  * Do a dynamical simulation of the swing equations using a semi-implicit
  * mid-point method.
- * This method is extremely fast as it only requires a single inversion of the
- * Jacobian but might lead to a small zick-zack behavior. This functions sets
- * the values of Network::t and Network::yData. A description of the algorithm
- * is given in G. Bader and P. Deuflhard, Numer. Math. 41, 373 (1983).
+ * This method is extremely fast as it only requires a single inversion of
+ * the Jacobian but might lead to a small zick-zack behavior. This functions
+ * sets the values of Network::t and Network::yData. A description of the
+ * algorithm is given in G. Bader and P. Deuflhard, Numer. Math. 41, 373
+ * (1983).
  * @param t0 Start time
  * @param tf Finish time
  * @param dt Time step
- * @param se Save only every `se`th step. Recommended to leave at default unless
- * memory problems are encountered.
- * @todo This functions should be refactored to be an interface that allows
- * different methods to be chosen.
  */
-void Network::dynamicalSimulation(double t0, double tf, double dt, int se) {
+void Network::midpoint(double t0, double tf, double dt) {
   double tt{t0};
   // Calculate number of steps and number of points saved
   arma::size_t nSteps{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
                       1};
-  arma::size_t saveN{nSteps % se == 0 ? nSteps / se : nSteps / se + 1};
 
   // Setup initial conditions
   arma::vec y{arma::join_cols(initAngles, arma::vec(nInertia))};
-  t = arma::vec(saveN);
-  yData = arma::mat(nNodes + nInertia, saveN);
+  t = arma::vec(nSteps);
+  yData = arma::mat(nNodes + nInertia, nSteps);
   yData.col(0) = y;
   arma::vec deltaCurrent(nNodes + nInertia);
   t(0) = tt;
@@ -243,29 +266,25 @@ void Network::dynamicalSimulation(double t0, double tf, double dt, int se) {
         boxPer = false;
       }
     }
-    if (i % se == 0) {
-      // Save data and print some useful information
-      std::cout << std::fixed << std::setprecision(1)
-                << (tt - t0) / (tf - t0) * 100
-                << "%\nMax omega: " << std::setprecision(4)
-                << arma::max(
-                       arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
-                << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
-      yData.col(i / se) = y;
-      t(i / se) = tt;
-    }
+    // Save data and print some useful information
+    std::cout << std::fixed << std::setprecision(1)
+              << (tt - t0) / (tf - t0) * 100
+              << "%\nMax omega: " << std::setprecision(4)
+              << arma::max(
+                     arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+              << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
+    yData.col(i) = y;
+    t(i) = tt;
     deltaCurrent += 2 * inv * (dt * f(y) - deltaCurrent);
     y += deltaCurrent;
     tt += dt;
   }
 
-  // Do special smoothing step only if the last data point is saved
-  if ((nSteps - 1) % se == 0) {
-    deltaCurrent = inv * (dt * f(y) - deltaCurrent);
-    y += deltaCurrent;
-    t(saveN - 1) = tt;
-    yData.col(saveN - 1) = y;
-  }
+  // Do special smoothing step
+  deltaCurrent = inv * (dt * f(y) - deltaCurrent);
+  y += deltaCurrent;
+  t(nSteps - 1) = tt;
+  yData.col(nSteps - 1) = y;
 
   // Insert the load frequencies
   yData.insert_rows(yData.n_rows, calculateLoadFrequencies());
@@ -483,7 +502,7 @@ void Network::saveData(std::string path, std::string type, int se, bool time) {
   for (int i = 0; i < ix.n_elem; ++i) {
     ix(i) = i * se;
   }
-  if (type.compare("frequency") == 0) {
+  if (type == "frequency") {
     if (time) {
       arma::mat tmp = arma::join_cols(arma::conv_to<arma::rowvec>::from(t),
                                       // ydata.rows(N, N + Nin - 1));
@@ -494,7 +513,7 @@ void Network::saveData(std::string path, std::string type, int se, bool time) {
           yData.submat(arma::linspace<arma::uvec>(nNodes, 2 * nNodes - 1), ix))
           .save(path, arma::csv_ascii);
     }
-  } else if (type.compare("angles") == 0) {
+  } else if (type == "angles") {
     if (time) {
       arma::mat tmp = arma::join_cols(arma::conv_to<arma::rowvec>::from(t),
                                       yData.rows(0, nNodes - 1));
@@ -553,9 +572,9 @@ arma::mat Network::calculateLoadFrequencies() {
  * @todo Allow to specify single machines
  */
 void Network::scaleParameters(double factor, std::string type) {
-  if (type.compare("damping") == 0) {
+  if (type == "damping") {
     damping *= factor;
-  } else if (type.compare("inertia") == 0) {
+  } else if (type == "inertia") {
     inertia *= factor;
   }
 }
@@ -568,14 +587,14 @@ void Network::scaleParameters(double factor, std::string type) {
  * `"angles"`
  */
 void Network::plotResults(std::string type) {
-  if (type.compare("frequency") == 0) {
+  if (type == "frequency") {
     std::vector<std::vector<double>> tmp;
     for (int i = 0; i < nNodes; ++i) {
       tmp.push_back(
           arma::conv_to<std::vector<double>>::from(yData.row(i + nNodes)));
     }
     matplot::plot(t, tmp, "k");
-  } else if (type.compare("angles") == 0) {
+  } else if (type == "angles") {
     std::vector<std::vector<double>> tmp;
     for (int i = 0; i < nNodes; ++i) {
       tmp.push_back(arma::conv_to<std::vector<double>>::from(yData.row(i)));
