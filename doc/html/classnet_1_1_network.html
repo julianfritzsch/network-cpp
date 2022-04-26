@@ -109,6 +109,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a74b5805bea8212fd55654d45ee40fa7f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a74b5805bea8212fd55654d45ee40fa7f">scaleParameters</a> (double factor, std::string type)</td></tr>
 <tr class="memdesc:a74b5805bea8212fd55654d45ee40fa7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scale dynamical parameters.  <a href="classnet_1_1_network.html#a74b5805bea8212fd55654d45ee40fa7f">More...</a><br /></td></tr>
 <tr class="separator:a74b5805bea8212fd55654d45ee40fa7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78e9c067292f0c9d9d7ba5e687e23917"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a78e9c067292f0c9d9d7ba5e687e23917">noise</a> (std::size_t node, double tau0, double stddev)</td></tr>
+<tr class="memdesc:a78e9c067292f0c9d9d7ba5e687e23917"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a noisy pertrubation.  <a href="classnet_1_1_network.html#a78e9c067292f0c9d9d7ba5e687e23917">More...</a><br /></td></tr>
+<tr class="separator:a78e9c067292f0c9d9d7ba5e687e23917"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd7f7ffa977be8dad2d77c8726e740eb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#afd7f7ffa977be8dad2d77c8726e740eb">noise</a> (std::size_t node, double tau0, double stddev, unsigned int seed)</td></tr>
+<tr class="memdesc:afd7f7ffa977be8dad2d77c8726e740eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a noisy pertrubation.  <a href="classnet_1_1_network.html#afd7f7ffa977be8dad2d77c8726e740eb">More...</a><br /></td></tr>
+<tr class="separator:afd7f7ffa977be8dad2d77c8726e740eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pri-methods" name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
@@ -137,6 +143,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setInitialAngles</b> 
 <tr class="memitem:a6521f42c0f6358c1dda239b0d9ed0198"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a6521f42c0f6358c1dda239b0d9ed0198">midpoint</a> (double t0, double tf, double dt=5.0e-3)</td></tr>
 <tr class="memdesc:a6521f42c0f6358c1dda239b0d9ed0198"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a dynamical simulation.  <a href="classnet_1_1_network.html#a6521f42c0f6358c1dda239b0d9ed0198">More...</a><br /></td></tr>
 <tr class="separator:a6521f42c0f6358c1dda239b0d9ed0198"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a041985bcca0cf9e433dc9f2365c78167"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a041985bcca0cf9e433dc9f2365c78167">midpointNoise</a> (double t0, double tf, double dt=5.0e-3)</td></tr>
+<tr class="memdesc:a041985bcca0cf9e433dc9f2365c78167"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a dynamical simulation.  <a href="classnet_1_1_network.html#a041985bcca0cf9e433dc9f2365c78167">More...</a><br /></td></tr>
+<tr class="separator:a041985bcca0cf9e433dc9f2365c78167"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a138cd8c992b65548f639e1f41e39c3b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a138cd8c992b65548f639e1f41e39c3b9">kapsRentrop</a> (double t0, double tf, double dtStart=5.0e-3, double dtMax=1e-1, double eps=1.0e-3, int maxTries=40)</td></tr>
 <tr class="memdesc:a138cd8c992b65548f639e1f41e39c3b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a dynamical simulation.  <a href="classnet_1_1_network.html#a138cd8c992b65548f639e1f41e39c3b9">More...</a><br /></td></tr>
 <tr class="separator:a138cd8c992b65548f639e1f41e39c3b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -193,11 +202,35 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>boxPower</b></td></
 double&#160;</td><td class="memItemRight" valign="bottom"><b>boxTime</b></td></tr>
 <tr class="memdesc:ae7007e61dba82173f4fa31863accae59"><td class="mdescLeft">&#160;</td><td class="mdescRight">Duration of box perturabtion. <br /></td></tr>
 <tr class="separator:ae7007e61dba82173f4fa31863accae59"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8388e15456ff2aae6343e1c7cf77ace"><td class="memItemLeft" align="right" valign="top"><a id="ae8388e15456ff2aae6343e1c7cf77ace" name="ae8388e15456ff2aae6343e1c7cf77ace"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>noisePer</b> {false}</td></tr>
+<tr class="memdesc:ae8388e15456ff2aae6343e1c7cf77ace"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether there is a noisy perturbation. <br /></td></tr>
+<tr class="separator:ae8388e15456ff2aae6343e1c7cf77ace"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4059beae94ab1cca374e5eb3526da924"><td class="memItemLeft" align="right" valign="top"><a id="a4059beae94ab1cca374e5eb3526da924" name="a4059beae94ab1cca374e5eb3526da924"></a>
+arma::uvec&#160;</td><td class="memItemRight" valign="bottom"><b>noiseIndices</b></td></tr>
+<tr class="memdesc:a4059beae94ab1cca374e5eb3526da924"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector of indices to which a noisy perturbation is applied. <br /></td></tr>
+<tr class="separator:a4059beae94ab1cca374e5eb3526da924"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47004155e2a65eb4ec21bf98bfd6510a"><td class="memItemLeft" align="right" valign="top"><a id="a47004155e2a65eb4ec21bf98bfd6510a" name="a47004155e2a65eb4ec21bf98bfd6510a"></a>
+std::vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>tau</b></td></tr>
+<tr class="memdesc:a47004155e2a65eb4ec21bf98bfd6510a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector of correlation times. <br /></td></tr>
+<tr class="separator:a47004155e2a65eb4ec21bf98bfd6510a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a101a308a72862c0104a72ecaaa9d9978"><td class="memItemLeft" align="right" valign="top"><a id="a101a308a72862c0104a72ecaaa9d9978" name="a101a308a72862c0104a72ecaaa9d9978"></a>
+std::vector&lt; unsigned int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>seeds</b></td></tr>
+<tr class="memdesc:a101a308a72862c0104a72ecaaa9d9978"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector of seeds for noisy perturbation. <br /></td></tr>
+<tr class="separator:a101a308a72862c0104a72ecaaa9d9978"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0cf86e8f2cc3fc940f103ecd19b78afb"><td class="memItemLeft" align="right" valign="top"><a id="a0cf86e8f2cc3fc940f103ecd19b78afb" name="a0cf86e8f2cc3fc940f103ecd19b78afb"></a>
+std::vector&lt; std::mt19937 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>gen</b></td></tr>
+<tr class="memdesc:a0cf86e8f2cc3fc940f103ecd19b78afb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector of random number generators. <br /></td></tr>
+<tr class="separator:a0cf86e8f2cc3fc940f103ecd19b78afb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a169492624edad855a7b50247993189f3"><td class="memItemLeft" align="right" valign="top"><a id="a169492624edad855a7b50247993189f3" name="a169492624edad855a7b50247993189f3"></a>
+std::vector&lt; std::normal_distribution&lt;&gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>normalDist</b></td></tr>
+<tr class="memdesc:a169492624edad855a7b50247993189f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector of normal distributions. <br /></td></tr>
+<tr class="separator:a169492624edad855a7b50247993189f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Simulate electrical power networks. </p>
-<p >Create an electric power network from an adjacency list and a list of coefficients. Functionality to create various faults such as step and box perturbations and noisy fluctuations (to be implemented). The dynamic behavior can be simulated using various numerical methods and the results exported to a file. Also provides basic plotting functionality. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd><p class="startdd">Add possibility to use noise as perturbation </p>
-<p class="enddd">Add possibility to scale parameters </p>
+<p >Create an electric power network from an adjacency list and a list of coefficients. Functionality to create various faults such as step and box perturbations and noisy fluctuations (to be implemented). The dynamic behavior can be simulated using various numerical methods and the results exported to a file. Also provides basic plotting functionality. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd><p class="startdd">Add explicit solvers for non-stiff problems </p>
+<p class="enddd">Add possibility to use noise as perturbation </p>
 </dd></dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a19dd5f759c437e719f7537ee4e6acb5a" name="a19dd5f759c437e719f7537ee4e6acb5a"></a>
@@ -684,11 +717,159 @@ double&#160;</td><td class="memItemRight" valign="bottom"><b>boxTime</b></td></t
 </div><div class="memdoc">
 
 <p>Run a dynamical simulation. </p>
-<p >Do a dynamical simulation of the swing equations using a semi-implicit mid-point method. This method is extremely fast as it only requires a single inversion of the Jacobian but might lead to a small zick-zack behavior. This functions sets the values of <a class="el" href="classnet_1_1_network.html#aeed5841bc5258a127debc735487e1b8d" title="Vector containing time stamps after a dynamical simulation.">Network::t</a> and <a class="el" href="classnet_1_1_network.html#a251a86b1746604f22bc3d6bae9a8e3b6" title="Angle and frequency data.">Network::yData</a>. A description of the algorithm is given in G. Bader and P. Deuflhard, Numer. Math. 41, 373 (1983). </p><dl class="params"><dt>Parameters</dt><dd>
+<p >Run a dynamical simulation of the swing equations using a semi-implicit mid-point method. This method is extremely fast as it only requires a single inversion of the Jacobian but might lead to a small zick-zack behavior. This functions sets the values of <a class="el" href="classnet_1_1_network.html#aeed5841bc5258a127debc735487e1b8d" title="Vector containing time stamps after a dynamical simulation.">Network::t</a> and <a class="el" href="classnet_1_1_network.html#a251a86b1746604f22bc3d6bae9a8e3b6" title="Angle and frequency data.">Network::yData</a>. A description of the algorithm is given in G. Bader and P. Deuflhard, Numer. Math. 41, 373 (1983). </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">t0</td><td>Start time </td></tr>
     <tr><td class="paramname">tf</td><td>Finish time </td></tr>
     <tr><td class="paramname">dt</td><td>Time step </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a041985bcca0cf9e433dc9f2365c78167" name="a041985bcca0cf9e433dc9f2365c78167"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a041985bcca0cf9e433dc9f2365c78167">&#9670;&nbsp;</a></span>midpointNoise()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void net::Network::midpointNoise </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>t0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>tf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dt</em> = <code>5.0e-3</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Run a dynamical simulation. </p>
+<p >Run a dynamical simulation of the swing equations using a semi-implicit mid-point method for a noisy perturbation. This method is extremely fast as it only requires a single inversion of the Jacobian but might lead to a small zick-zack behavior. This functions sets the values of <a class="el" href="classnet_1_1_network.html#aeed5841bc5258a127debc735487e1b8d" title="Vector containing time stamps after a dynamical simulation.">Network::t</a> and <a class="el" href="classnet_1_1_network.html#a251a86b1746604f22bc3d6bae9a8e3b6" title="Angle and frequency data.">Network::yData</a>. A description of the algorithm is given in G. Bader and P. Deuflhard, Numer. Math. 41, 373 (1983). The noise is generated following M. Deserno, "How to generate exponentially
+correlated Gaussian random numbers" (2002). </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">t0</td><td>Start time </td></tr>
+    <tr><td class="paramname">tf</td><td>Finish time </td></tr>
+    <tr><td class="paramname">dt</td><td>Time step </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a78e9c067292f0c9d9d7ba5e687e23917" name="a78e9c067292f0c9d9d7ba5e687e23917"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a78e9c067292f0c9d9d7ba5e687e23917">&#9670;&nbsp;</a></span>noise() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void net::Network::noise </td>
+          <td>(</td>
+          <td class="paramtype">std::size_t&#160;</td>
+          <td class="paramname"><em>node</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>tau0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>stddev</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a noisy pertrubation. </p>
+<p >Add a noisy perturbation to the power output / consumption of a given node. The noise is correlated with the specified correlation time. The standard deviation is given as a multiple of the nominal power output. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">node</td><td>Node to which the perturbation is applied </td></tr>
+    <tr><td class="paramname">tau0</td><td>Correlation time </td></tr>
+    <tr><td class="paramname">stddev</td><td>Standard deviation as a multiple of the nominal power output. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="afd7f7ffa977be8dad2d77c8726e740eb" name="afd7f7ffa977be8dad2d77c8726e740eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afd7f7ffa977be8dad2d77c8726e740eb">&#9670;&nbsp;</a></span>noise() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void net::Network::noise </td>
+          <td>(</td>
+          <td class="paramtype">std::size_t&#160;</td>
+          <td class="paramname"><em>node</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>tau0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>stddev</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>seed</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a noisy pertrubation. </p>
+<p >Add a noisy perturbation to the power output / consumption of a given node. The noise is correlated with the specified correlation time. The standard deviation is given as a multiple of the nominal power output. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">node</td><td>Node to which the perturbation is applied </td></tr>
+    <tr><td class="paramname">tau0</td><td>Correlation time </td></tr>
+    <tr><td class="paramname">stddev</td><td>Standard deviation as a multiple of the nominal power output. </td></tr>
+    <tr><td class="paramname">seed</td><td>Seed for the random number generator </td></tr>
   </table>
   </dd>
 </dl>

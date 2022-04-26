@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['savedata_0',['saveData',['../classnet_1_1_network.html#a5b3fbd0ae5a205e1fab52d4f268f62f0',1,'net::Network']]],
-  ['scaleparameters_1',['scaleParameters',['../classnet_1_1_network.html#a74b5805bea8212fd55654d45ee40fa7f',1,'net::Network']]],
-  ['setinitialangles_2',['setInitialAngles',['../classnet_1_1_network.html#ac3ad2b6e6eebe6a05e6f86a8b35ec7f2',1,'net::Network::setInitialAngles()'],['../classnet_1_1_network.html#a6c311715ffea52fbb6193b7d36b27be3',1,'net::Network::setInitialAngles(std::string angles)']]],
-  ['step_3',['step',['../classnet_1_1_network.html#a664520fdfd85a92da0c829586cc9ae65',1,'net::Network']]]
+  ['plotresults_0',['plotResults',['../classnet_1_1_network.html#aaff237cb337f7092ddb2f9ccc9cc9fa4',1,'net::Network::plotResults(std::string type=&quot;frequency&quot;)'],['../classnet_1_1_network.html#aa0a5e38e713f159a45c5f80f3ef7f57e',1,'net::Network::plotResults(std::string areafile, std::string type=&quot;frequency&quot;)']]],
+  ['power_1',['power',['../classnet_1_1_network.html#a5a637491b45cb8b48ebae77c24f366c2',1,'net::Network']]]
 ];

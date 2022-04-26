@@ -21,6 +21,7 @@
 #include <matplot/matplot.h>
 
 #include <armadillo>
+#include <random>
 #include <string>
 #include <utility>
 #include <vector>
@@ -34,8 +35,8 @@ namespace net {
  * implemented). The dynamic behavior can be simulated using various numerical
  * methods and the results exported to a file. Also provides basic plotting
  * functionality.
+ * @todo Add explicit solvers for non-stiff problems
  * @todo Add possibility to use noise as perturbation
- * @todo Add possibility to scale parameters
  */
 class Network {
  public:
@@ -53,6 +54,8 @@ class Network {
   void plotResults(std::string type = "frequency");
   void plotResults(std::string areafile, std::string type = "frequency");
   void scaleParameters(double factor, std::string type);
+  void noise(std::size_t node, double tau0, double stddev);
+  void noise(std::size_t node, double tau0, double stddev, unsigned int seed);
 
  private:
   void createAdjlist(std::string adjlist);
@@ -63,6 +66,7 @@ class Network {
   arma::vec f(arma::vec y);
   arma::sp_mat df(arma::vec& y);
   void midpoint(double t0, double tf, double dt = 5.0e-3);
+  void midpointNoise(double t0, double tf, double dt = 5.0e-3);
   void kapsRentrop(double t0, double tf, double dtStart = 5.0e-3,
                    double dtMax = 1e-1, double eps = 1.0e-3, int maxTries = 40);
 
@@ -102,6 +106,18 @@ class Network {
   double boxPower;
   /** Duration of box perturabtion */
   double boxTime;
+  /** Whether there is a noisy perturbation */
+  bool noisePer{false};
+  /** Vector of indices to which a noisy perturbation is applied */
+  arma::uvec noiseIndices;
+  /** Vector of correlation times */
+  std::vector<double> tau;
+  /** Vector of seeds for noisy perturbation */
+  std::vector<unsigned int> seeds;
+  /** Vector of random number generators */
+  std::vector<std::mt19937> gen;
+  /** Vector of normal distributions */
+  std::vector<std::normal_distribution<>> normalDist;
 };
 }  // namespace net
 #endif

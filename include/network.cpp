@@ -20,6 +20,7 @@
 #include <matplot/matplot.h>
 
 #include <iostream>
+#include <random>
 #include <string>
 #include <utility>
 #include <vector>
@@ -196,6 +197,43 @@ void Network::box(std::size_t node, double powerChange, double time) {
 }
 
 /**
+ * Create a noisy pertrubation.
+ * Add a noisy perturbation to the power output / consumption of a given node.
+ * The noise is correlated with the specified correlation time. The standard
+ * deviation is given as a multiple of the nominal power output.
+ * @param node Node to which the perturbation is applied
+ * @param tau0 Correlation time
+ * @param stddev Standard deviation as a multiple of the nominal power output.
+ */
+void Network::noise(std::size_t node, double tau0, double stddev) {
+  noisePer = true;
+  noiseIndices.insert_rows(noiseIndices.n_rows, arma::urowvec{node});
+  tau.push_back(tau0);
+  std::random_device rd;
+  gen.push_back(std::mt19937(rd()));
+  normalDist.push_back(std::normal_distribution<>(0, power(node) * stddev));
+}
+
+/**
+ * Create a noisy pertrubation.
+ * Add a noisy perturbation to the power output / consumption of a given node.
+ * The noise is correlated with the specified correlation time. The standard
+ * deviation is given as a multiple of the nominal power output.
+ * @param node Node to which the perturbation is applied
+ * @param tau0 Correlation time
+ * @param stddev Standard deviation as a multiple of the nominal power output.
+ * @param seed Seed for the random number generator
+ */
+void Network::noise(std::size_t node, double tau0, double stddev,
+                    unsigned int seed) {
+  noisePer = true;
+  noiseIndices.insert_rows(noiseIndices.n_rows, arma::urowvec{node});
+  tau.push_back(tau0);
+  gen.push_back(std::mt19937(seed));
+  normalDist.push_back(std::normal_distribution<>(0, power(node) * stddev));
+}
+
+/**
  * Run a dynamical simulation.
  * The method used has to be specified by `method`. At the moment it can be
  * chosen between a semi-implicit mid-point method or a fourth order
@@ -213,10 +251,16 @@ void Network::box(std::size_t node, double powerChange, double time) {
 void Network::dynamicalSimulation(double t0, double tf, std::string method,
                                   double dt, double dtMax, double eps,
                                   int maxTries) {
-  if (method == "midpoint") {
+  if (method == "midpoint" && !noisePer) {
     midpoint(t0, tf, dt);
-  } else if (method == "kapsrentrop") {
+  } else if (method == "midpoint" && noisePer) {
+    midpointNoise(t0, tf, dt);
+  } else if (method == "kapsrentrop" && !noisePer) {
     kapsRentrop(t0, tf, dt, dtMax, eps, maxTries);
+  } else if (method == "kapsrentrop" && noisePer) {
+    std::cout << "The Kaps-Rentrop method is not yet implemented for a noisy "
+                 "perturbation. Using the midpoint method instead.\n";
+    midpointNoise(t0, tf, dt);
   } else {
     std::cout << "Method not found. Must be \"midpoint\" or \"kapsrentrop\".\n";
   }
@@ -224,7 +268,7 @@ void Network::dynamicalSimulation(double t0, double tf, std::string method,
 
 /**
  * Run a dynamical simulation.
- * Do a dynamical simulation of the swing equations using a semi-implicit
+ * Run a dynamical simulation of the swing equations using a semi-implicit
  * mid-point method.
  * This method is extremely fast as it only requires a single inversion of
  * the Jacobian but might lead to a small zick-zack behavior. This functions
@@ -237,7 +281,7 @@ void Network::dynamicalSimulation(double t0, double tf, std::string method,
  */
 void Network::midpoint(double t0, double tf, double dt) {
   double tt{t0};
-  // Calculate number of steps and number of points saved
+  // Calculate number of steps
   arma::size_t nSteps{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
                       1};
 
@@ -292,6 +336,94 @@ void Network::midpoint(double t0, double tf, double dt) {
             << arma::max(
                    arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
             << "\n";
+}
+
+/**
+ * Run a dynamical simulation.
+ * Run a dynamical simulation of the swing equations using a semi-implicit
+ * mid-point method for a noisy perturbation.
+ * This method is extremely fast as it only requires a single inversion of
+ * the Jacobian but might lead to a small zick-zack behavior. This functions
+ * sets the values of Network::t and Network::yData. A description of the
+ * algorithm is given in G. Bader and P. Deuflhard, Numer. Math. 41, 373
+ * (1983).
+ * The noise is generated following M. Deserno, "How to generate exponentially
+ * correlated Gaussian random numbers" (2002).
+ * @param t0 Start time
+ * @param tf Finish time
+ * @param dt Time step
+ */
+void Network::midpointNoise(double t0, double tf, double dt) {
+  // Setup noise genertion
+  std::vector<double> fexp;
+  for (const auto &i : tau) {
+    fexp.push_back(std::exp(-dt / i));
+  }
+  std::vector<double> corrCoeff;
+  for (const auto &i : fexp) {
+    corrCoeff.push_back(std::sqrt(1.0 - i * i));
+  }
+  arma::vec powerref{power};
+  arma::vec r(nNodes, arma::fill::zeros);
+  const std::size_t nNoise{noiseIndices.size()};
+
+  // Calculate number of steps
+  arma::size_t nSteps{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
+                      1};
+
+  // Setup initial conditions
+  double tt{t0};
+  arma::vec y{arma::join_cols(initAngles, arma::vec(nInertia))};
+  t = arma::vec(nSteps);
+  yData = arma::mat(nNodes + nInertia, nSteps);
+  yData.col(0) = y;
+  arma::vec deltaCurrent(nNodes + nInertia);
+  t(0) = tt;
+
+  // Do first step
+  arma::mat toinv =
+      arma::eye(nNodes + nInertia, nNodes + nInertia) - dt * arma::mat(df(y));
+  arma::mat inv = arma::inv(toinv);
+  deltaCurrent = dt * inv * f(y);
+  y += deltaCurrent;
+  tt += dt;
+
+  // Main loop
+  for (int i = 1; i < nSteps - 1; ++i) {
+    // Create noisy perturbation
+    for (std::size_t j = 0; j < nNoise; ++j) {
+      r(noiseIndices[j]) =
+          fexp[j] * r(noiseIndices[j]) + corrCoeff[j] * normalDist[j](gen[j]);
+    }
+    power = powerref + r;
+    // Save data and print some useful information
+    std::cout << std::fixed << std::setprecision(1)
+              << (tt - t0) / (tf - t0) * 100
+              << "%\nMax omega: " << std::setprecision(4)
+              << arma::max(
+                     arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+              << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
+    yData.col(i) = y;
+    t(i) = tt;
+    deltaCurrent += 2 * inv * (dt * f(y) - deltaCurrent);
+    y += deltaCurrent;
+    tt += dt;
+  }
+
+  // Do special smoothing step
+  deltaCurrent = inv * (dt * f(y) - deltaCurrent);
+  y += deltaCurrent;
+  t(nSteps - 1) = tt;
+  yData.col(nSteps - 1) = y;
+
+  // Insert the load frequencies
+  yData.insert_rows(yData.n_rows, calculateLoadFrequencies());
+  std::cout << "Final max omega: "
+            << arma::max(
+                   arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+            << "\n";
+  // Reset power
+  power = powerref;
 }
 
 /**

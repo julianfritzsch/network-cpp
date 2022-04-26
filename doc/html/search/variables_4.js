@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['ninertia_0',['nInertia',['../classnet_1_1_network.html#aae844bbb8d42ec8b1ff5a029a13bc88b',1,'net::Network']]],
-  ['nnodes_1',['nNodes',['../classnet_1_1_network.html#aaf947805b0b972411272410ae1104405',1,'net::Network']]]
+  ['inertia_0',['inertia',['../classnet_1_1_network.html#a62d4618f6ab2ac690ea8bc05f2a9666c',1,'net::Network']]],
+  ['initangles_1',['initAngles',['../classnet_1_1_network.html#ab88d99b8d30fd22ba6148266b439bb52',1,'net::Network']]]
 ];

@@ -40,23 +40,27 @@ int main(int argv, char **argc) {
       {0.01, "0.01"}, {0.05, "0.05"}, {0.1, "0.1"}, {0.5, "0.5"},
       {1, "1"},       {5, "5"},       {10, "10"}};
 
-  for (auto &i : scaling) {
-    std::cout << i.second << '\n';
-    net::Network tmp{adjlist, coeffs, angles};
-    tmp.step(419, -9.0);
-    tmp.scaleParameters(i.first, "damping");
-    tmp.dynamicalSimulation(0, 40);
-    tmp.saveData("damping" + i.second + ".csv", "frequency");
-  }
-
-  for (auto &i : scaling) {
-    std::cout << i.second << '\n';
-    net::Network tmp{adjlist, coeffs, angles};
-    tmp.step(419, -9.0);
-    tmp.scaleParameters(i.first, "inertia");
-    tmp.dynamicalSimulation(0, 40);
-    tmp.saveData("inertia" + i.second + ".csv", "frequency");
-  }
+  net::Network panta{adjlist, coeffs, angles};
+  panta.noise(419, 25, 0.01, 170996);
+  panta.dynamicalSimulation(0, 50);
+  panta.saveData("noisetest.csv");
+  // for (auto &i : scaling) {
+  //   std::cout << i.second << '\n';
+  //   net::Network tmp{adjlist, coeffs, angles};
+  //   tmp.step(419, -9.0);
+  //   tmp.scaleParameters(i.first, "damping");
+  //   tmp.dynamicalSimulation(0, 40);
+  //   tmp.saveData("damping" + i.second + ".csv", "frequency");
+  // }
+  //
+  // for (auto &i : scaling) {
+  //   std::cout << i.second << '\n';
+  //   net::Network tmp{adjlist, coeffs, angles};
+  //   tmp.step(419, -9.0);
+  //   tmp.scaleParameters(i.first, "inertia");
+  //   tmp.dynamicalSimulation(0, 40);
+  //   tmp.saveData("inertia" + i.second + ".csv", "frequency");
+  // }
 
   return 0;
 }
