@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22.3)
 
 # Set the project name
-project(Network-CPP VERSION 0.0.1)
+project(Network-CPP VERSION 0.1.0)
 
 # Export config header
 configure_file(ProjectConfig.hpp.in ProjectConfig.hpp)

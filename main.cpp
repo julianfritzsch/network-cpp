@@ -37,30 +37,34 @@ int main(int argv, char **argc) {
   std::string angles = std::string(SOURCE_DIR) + "/data/syncedangles.csv";
 
   std::vector<std::pair<double, std::string>> scaling{
-      {0.01, "0.01"}, {0.05, "0.05"}, {0.1, "0.1"}, {0.5, "0.5"},
-      {1, "1"},       {5, "5"},       {10, "10"}};
+      {0.001, "0.001"}, {0.005, "0.005"}, {0.01, "0.01"}  //, {0.05, "0.05"},
+                                                          // {0.1, "0.1"}, {0.5,
+                                                          // "0.5"}, {1, "1"},
+                                                          // {5, "5"},
+                                                          // {10, "10"}
+  };
 
-  net::Network panta{adjlist, coeffs, angles};
-  panta.noise(419, 25, 0.01);
-  panta.dynamicalSimulation(0, 25, "midpoint", 5.0e-3, 5.0e-2);
-  panta.saveData("noisetestmid.csv", "frequency", 1);
+  // net::Network panta{adjlist, coeffs, angles};
+  // panta.noise(419, 25, 0.01);
+  // panta.dynamicalSimulation(0, 25, "midpoint", 5.0e-3, 5.0e-2);
+  // panta.saveData("noisetestmid.csv", "frequency", 1);
 
-  for (auto &i : scaling) {
-    std::cout << i.second << '\n';
-    net::Network tmp{adjlist, coeffs, angles};
-    tmp.step(419, -9.0);
-    tmp.scaleParameters(i.first, "damping");
-    tmp.dynamicalSimulation(0, 40);
-    tmp.saveData("damping" + i.second + ".csv", "frequency");
-  }
+  // for (auto &i : scaling) {
+  //   std::cout << i.second << '\n';
+  //   net::Network tmp{adjlist, coeffs, angles};
+  //   tmp.step(419, -9.0);
+  //   tmp.scaleParameters(i.first, "damping");
+  //   tmp.dynamicalSimulation(0, 10, "kapsrentrop");
+  //   tmp.saveData("damping" + i.second + ".csv", "frequency");
+  // }
 
   for (auto &i : scaling) {
     std::cout << i.second << '\n';
     net::Network tmp{adjlist, coeffs, angles};
     tmp.step(419, -9.0);
     tmp.scaleParameters(i.first, "inertia");
-    tmp.dynamicalSimulation(0, 40);
-    tmp.saveData("inertia" + i.second + ".csv", "frequency");
+    tmp.dynamicalSimulation(0, 5, "kapsrentrop", 5.0e-3, 2.5e-2, 5.0e-4);
+    tmp.saveData("inertia" + i.second + ".csv", "frequency", 1);
   }
 
   return 0;
