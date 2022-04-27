@@ -6,5 +6,6 @@
 release/
 debug/
 data/
+doc/
 compile_commands.json
 .DS_Store
