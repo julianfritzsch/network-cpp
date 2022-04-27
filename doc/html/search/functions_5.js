@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['network_0',['Network',['../classnet_1_1_network.html#a19dd5f759c437e719f7537ee4e6acb5a',1,'net::Network::Network(std::string adjlist, std::string coeffs)'],['../classnet_1_1_network.html#ab6bc03afc45dc9504e6896946883b5a3',1,'net::Network::Network(std::string adjlist, std::string coeffs, std::string angles)']]]
+  ['kapsrentrop_0',['kapsRentrop',['../classnet_1_1_network.html#a2ca2441781b6b97ce38114537d1da339',1,'net::Network']]],
+  ['kapsrentropnoise_1',['kapsRentropNoise',['../classnet_1_1_network.html#ad3a0996cec12b60bb633490d1372c3e0',1,'net::Network']]]
 ];

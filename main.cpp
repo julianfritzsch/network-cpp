@@ -40,6 +40,11 @@ int main(int argv, char **argc) {
       {0.01, "0.01"}, {0.05, "0.05"}, {0.1, "0.1"}, {0.5, "0.5"},
       {1, "1"},       {5, "5"},       {10, "10"}};
 
+  net::Network panta{adjlist, coeffs, angles};
+  panta.noise(419, 25, 0.01);
+  panta.dynamicalSimulation(0, 25, "midpoint", 5.0e-3, 5.0e-2);
+  panta.saveData("noisetestmid.csv", "frequency", 1);
+
   for (auto &i : scaling) {
     std::cout << i.second << '\n';
     net::Network tmp{adjlist, coeffs, angles};

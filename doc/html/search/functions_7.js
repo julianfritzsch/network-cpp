@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['savedata_0',['saveData',['../classnet_1_1_network.html#a5b3fbd0ae5a205e1fab52d4f268f62f0',1,'net::Network']]],
-  ['scaleparameters_1',['scaleParameters',['../classnet_1_1_network.html#a74b5805bea8212fd55654d45ee40fa7f',1,'net::Network']]],
-  ['setinitialangles_2',['setInitialAngles',['../classnet_1_1_network.html#ac3ad2b6e6eebe6a05e6f86a8b35ec7f2',1,'net::Network::setInitialAngles()'],['../classnet_1_1_network.html#a6c311715ffea52fbb6193b7d36b27be3',1,'net::Network::setInitialAngles(std::string angles)']]],
-  ['step_3',['step',['../classnet_1_1_network.html#a664520fdfd85a92da0c829586cc9ae65',1,'net::Network']]]
+  ['network_0',['Network',['../classnet_1_1_network.html#a19dd5f759c437e719f7537ee4e6acb5a',1,'net::Network::Network(std::string adjlist, std::string coeffs)'],['../classnet_1_1_network.html#ab6bc03afc45dc9504e6896946883b5a3',1,'net::Network::Network(std::string adjlist, std::string coeffs, std::string angles)']]],
+  ['noise_1',['noise',['../classnet_1_1_network.html#a78e9c067292f0c9d9d7ba5e687e23917',1,'net::Network::noise(std::size_t node, double tau0, double stddev)'],['../classnet_1_1_network.html#afd7f7ffa977be8dad2d77c8726e740eb',1,'net::Network::noise(std::size_t node, double tau0, double stddev, unsigned int seed)']]]
 ];
