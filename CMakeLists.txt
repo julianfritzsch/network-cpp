@@ -13,6 +13,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
+add_compile_options(-Wall)
 
 # Specify directories
 find_package(Armadillo REQUIRED)

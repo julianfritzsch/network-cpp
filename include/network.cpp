@@ -127,7 +127,7 @@ void Network::createCoeffLists(std::string coeffs) {
     while (ss >> tempin) {
       switch (colindex) {
         case 0:
-          gen = static_cast<arma::size_t>(round(tempin));
+          gen = static_cast<std::size_t>(round(tempin));
           break;
         case 1:
           inertia(gen) = tempin;
@@ -258,9 +258,11 @@ void Network::dynamicalSimulation(double t0, double tf, std::string method,
   } else if (method == "kapsrentrop" && !noisePer) {
     kapsRentrop(t0, tf, dt, dtMax, eps, maxTries);
   } else if (method == "kapsrentrop" && noisePer) {
-    std::cout << "The Kaps-Rentrop method is not yet implemented for a noisy "
-                 "perturbation. Using the midpoint method instead.\n";
-    midpointNoise(t0, tf, dt);
+    // std::cout << "The Kaps-Rentrop method is not yet implemented for a noisy
+    // "
+    //              "perturbation. Using the midpoint method instead.\n";
+    // midpointNoise(t0, tf, dt);
+    kapsRentropNoise(t0, tf, dt, dtMax, eps, maxTries);
   } else {
     std::cout << "Method not found. Must be \"midpoint\" or \"kapsrentrop\".\n";
   }
@@ -282,8 +284,7 @@ void Network::dynamicalSimulation(double t0, double tf, std::string method,
 void Network::midpoint(double t0, double tf, double dt) {
   double tt{t0};
   // Calculate number of steps
-  arma::size_t nSteps{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
-                      1};
+  std::size_t nSteps{static_cast<std::size_t>(std::round((tf - t0) / dt)) + 1};
 
   // Setup initial conditions
   arma::vec y{arma::join_cols(initAngles, arma::vec(nInertia))};
@@ -331,7 +332,7 @@ void Network::midpoint(double t0, double tf, double dt) {
   yData.col(nSteps - 1) = y;
 
   // Insert the load frequencies
-  yData.insert_rows(yData.n_rows, calculateLoadFrequencies());
+  yData.insert_rows(yData.n_rows, derivative(t, yData));
   std::cout << "Final max omega: "
             << arma::max(
                    arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
@@ -368,8 +369,7 @@ void Network::midpointNoise(double t0, double tf, double dt) {
   const std::size_t nNoise{noiseIndices.size()};
 
   // Calculate number of steps
-  arma::size_t nSteps{static_cast<arma::size_t>(std::round((tf - t0) / dt)) +
-                      1};
+  std::size_t nSteps{static_cast<std::size_t>(std::round((tf - t0) / dt)) + 1};
 
   // Setup initial conditions
   double tt{t0};
@@ -417,7 +417,7 @@ void Network::midpointNoise(double t0, double tf, double dt) {
   yData.col(nSteps - 1) = y;
 
   // Insert the load frequencies
-  yData.insert_rows(yData.n_rows, calculateLoadFrequencies());
+  yData.insert_rows(yData.n_rows, derivative(t, yData));
   std::cout << "Final max omega: "
             << arma::max(
                    arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
@@ -467,10 +467,6 @@ void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
   const double e2{7.0 / 36.0};
   const double e3{0.0};
   const double e4{125.0 / 108.0};
-  const double c1x{1.0 / 2.0};
-  const double c2x{-3.0 / 2.0};
-  const double c3x{121.0 / 50.0};
-  const double c4x{29.0 / 250.0};
 
   // Setup initial values
   double tt{t0};
@@ -540,14 +536,193 @@ void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
   }
 
   // Insert load frequency data
-  yData.insert_rows(yData.n_rows, calculateLoadFrequencies());
+  yData.insert_rows(yData.n_rows, derivative(t, yData));
   std::cout << "Final max omega: "
             << arma::max(
                    arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
             << "\n";
 }
 
-/** Return function value.
+/**
+ * Run a dynamical simulation.
+ * Run a dynamical simulation using the fourth order Kaps-Rentrop method with
+ * adaptive stepsize. This method is more precise and stable but considerably
+ * slower as it require 4 linear systems to be solved at every step. For a
+ * description of the algorithm and the different constants see J. R. Winkler,
+ * Endeavour 17, 201 (1993). This functions sets the values of Network::t and
+ * Network::yData.
+ * @param t0 Start time
+ * @param tf Finish time
+ * @param dtStart First time step
+ * @param dtMax Maximum allowed time step
+ * @param eps Maximum allowed error at each step. \f$\text{error} < \varepsilon
+ * y + \varepsilon\f$
+ * @param maxTries Maximum allowed tries for one step. The method will abort if
+ * maxTries is reached.
+ * @todo Use a different solver to directly obtain LU-decomposition to only do
+ * it once per step, that might require rewriting this library using Eigen
+ * @todo Change data storage to avoid constant reallocations
+ */
+void Network::kapsRentropNoise(double t0, double tf, double dtStart,
+                               double dtMax, double eps, int maxTries) {
+  // Setup constants
+  const double gam{1.0 / 2.0};
+  const double a21{2.0};
+  const double a31{48.0 / 25.0};
+  const double a32{6.0 / 25.0};
+  const double c21{-8.0};
+  const double c31{372.0 / 25.0};
+  const double c32{12.0 / 5.0};
+  const double c41{-112.0 / 125.0};
+  const double c42{-54.0 / 125.0};
+  const double c43{-2.0 / 5.0};
+  const double b1{19.0 / 9.0};
+  const double b2{1.0 / 2.0};
+  const double b3{25.0 / 108.0};
+  const double b4{125.0 / 108.0};
+  const double e1{17.0 / 54.0};
+  const double e2{7.0 / 36.0};
+  const double e3{0.0};
+  const double e4{125.0 / 108.0};
+  const double c1x{1.0 / 2.0};
+  const double c2x{-3.0 / 2.0};
+  const double c3x{121.0 / 50.0};
+  const double c4x{29.0 / 250.0};
+  const double a2x{1.0};
+  const double a3x{3.0 / 5.0};
+
+  // Setup noise genertion
+  double dtNoise{dtStart};
+  std::vector<double> fexp;
+  for (const auto &i : tau) {
+    fexp.push_back(std::exp(-dtNoise / i));
+  }
+  std::vector<double> corrCoeff;
+  for (const auto &i : fexp) {
+    corrCoeff.push_back(std::sqrt(1.0 - i * i));
+  }
+  arma::vec powerref{power};
+  arma::vec r(nNodes, arma::fill::zeros);
+  const std::size_t nNoise{noiseIndices.size()};
+  std::size_t nInter = {
+      static_cast<std::size_t>(std::round((tf - t0 + dtMax) / dtNoise)) + 1};
+  tInter = arma::vec(nInter);
+  noiseInter = arma::mat(nNodes, nInter);
+  for (std::size_t i = 0; i < nInter; ++i) {
+    // Create noisy perturbation
+    for (std::size_t j = 0; j < nNoise; ++j) {
+      r(noiseIndices[j]) =
+          fexp[j] * r(noiseIndices[j]) + corrCoeff[j] * normalDist[j](gen[j]);
+    }
+    noiseInter.col(i) = r;
+    tInter(i) = t0 + i * dtNoise;
+  }
+  // Get time derivative of swing equations (= time derivative of noise) and
+  // reorganize
+  arma::mat temp = derivative(tInter, noiseInter);
+  arma::mat noiseDer(nNodes + nInertia, tInter.n_elem, arma::fill::zeros);
+  noiseDer.rows(arma::span(nInertia, nNodes - 1)) =
+      temp.tail_rows(nNodes - nInertia);
+  noiseDer.tail_rows(nInertia) = temp.head_rows(nInertia);
+
+  // Setup initial values
+  double tt{t0};
+  double dt{dtStart};
+  arma::vec y{arma::join_cols(initAngles, arma::vec(nInertia))};
+  yData.insert_cols(0, y);
+  t.insert_rows(0, arma::rowvec{tt});
+
+  // Create needed arrays
+  arma::sp_mat jacobian, leftSide, timeDer;
+  arma::vec k1, k2, k3, k4, yscale;
+  int tries{0};
+
+  // Main loop
+  while (tt < tf) {
+    // Do one step
+    jacobian = df(y);
+    timeDer = interpolate(tInter, noiseDer, tt);
+    leftSide =
+        arma::speye(nNodes + nInertia, nNodes + nInertia) / gam / dt - jacobian;
+    yscale = eps * arma::abs(y) + eps;
+    k1 = arma::spsolve(leftSide, f(y, tt) + dt * c1x * timeDer);
+    k2 = arma::spsolve(leftSide, f(y + a21 * k1, tt + a2x * dt) +
+                                     c2x * dt * timeDer + c21 * k1 / dt);
+    arma::vec f34 = f(y + a31 * k1 + a32 * k2, tt + a3x * dt);
+    k3 = arma::spsolve(
+        leftSide, f34 + c3x * dt * timeDer + c31 * k1 / dt + c32 * k2 / dt);
+    k4 = arma::spsolve(leftSide, f34 + +c4x * dt * timeDer + c41 * k1 / dt +
+                                     c42 * k2 / dt + c43 * k3 / dt);
+
+    // Error calculation. If error < 1 save data and increase step size, else
+    // decrease and redo step
+    arma::vec err = e1 * k1 + e2 * k2 + e3 * k3 + e4 * k4;
+    double error = arma::max(arma::abs(err / yscale));
+    if (error < 1) {
+      y += b1 * k1 + b2 * k2 + b3 * k3 + b4 * k4;
+      tt += dt;
+      dt = std::min(0.95 * std::pow(1.0 / error, 1.0 / 4.0) * dt,
+                    std::min(1.5 * dt, dtMax));
+      tries = 0;
+      yData.insert_cols(yData.n_cols, y);
+      t.insert_rows(t.n_rows, arma::rowvec{tt});
+      // Print some useful information
+      std::cout << std::fixed << std::setprecision(1)
+                << (tt - t0) / (tf - t0) * 100
+                << "%\nMax omega: " << std::setprecision(4)
+                << arma::max(
+                       arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+                << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
+    } else {
+      dt = std::max(0.95 * std::pow(1.0 / error, 1.0 / 3.0) * dt, 0.5 * dt);
+      if (dt < 1.0e-5) {
+        std::cout << "Step size effectively zero.\n";
+        break;
+      }
+      tries++;
+      if (tries == maxTries) {
+        std::cout << "Max tries reached!\n";
+        break;
+      }
+    }
+  }
+
+  // Insert load frequency data
+  yData.insert_rows(yData.n_rows, derivative(t, yData));
+  std::cout << "Final max omega: "
+            << arma::max(
+                   arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+            << "\n";
+}
+
+/**
+ * Interpolate noise.
+ * Get the noisy perturbation at arbitrary time steps by interpolating the
+ * pre-generated noise.
+ * @param t Time step at which the interpolated value is calculated
+ */
+arma::vec Network::interpolate(arma::vec &tpoints, arma::mat &ypoints,
+                               double t) {
+  // Check if exact value is available, if not find neighboring points
+  double dtInter = tpoints(1) - tpoints(0);
+  std::size_t ix{0};
+  for (std::size_t i = 0; i < tpoints.n_elem; ++i) {
+    if (std::abs(tpoints(i) - t) < 1e-6) {
+      return ypoints.col(i);
+    } else if (t - tpoints(i) < dtInter) {
+      ix = i;
+      break;
+    }
+  }
+  // Calculate linear interpolation
+  arma::vec re = ypoints.col(ix) + (t - tpoints(ix)) *
+                                       (ypoints.col(ix + 1) - ypoints.col(ix)) /
+                                       (tpoints(ix + 1) - tpoints(ix));
+  return re;
+}
+
+/**
+ * Return function value.
  * Returns the value of the swing equations for the given angles and
  * frequencies. For a definition of the swing equations see, e.g., A. R. Bergen
  * and V. Vittal, Power Systems Analysis, 2nd ed (Prentice Hall, Upper Saddle
@@ -566,6 +741,38 @@ arma::vec Network::f(arma::vec y) {
   }
   for (std::size_t i = nInertia; i < nNodes; ++i) {
     re(i) = power(i);
+    for (auto &j : adjacencyList[i]) {
+      re(i) -= j.second * std::sin(y(i) - y(j.first));
+    }
+    re(i) /= damping(i);
+  }
+  return re;
+}
+
+/**
+ * Return function value with noise applied.
+ * Returns the value of the swing equations for the given angles and
+ * frequencies. For a definition of the swing equations see, e.g., A. R. Bergen
+ * and V. Vittal, Power Systems Analysis, 2nd ed (Prentice Hall, Upper Saddle
+ * River, NJ, 2000).
+ * This is the time dependent version for the case of the Kaps-Rentrop method
+ * with noise applied.
+ * @param y Vector containing angles and frequencies
+ * @param t Time at which the functions are evaluated
+ */
+arma::vec Network::f(arma::vec y, double t) {
+  arma::vec re(nNodes + nInertia);
+  arma::vec fluc = interpolate(tInter, noiseInter, t);
+  for (std::size_t i = 0; i < nInertia; ++i) {
+    re(i) = y(nNodes + i);
+    re(nNodes + i) = power(i) + fluc(i) - damping(i) * y(nNodes + i);
+    for (auto &j : adjacencyList[i]) {
+      re(nNodes + i) -= j.second * std::sin(y(i) - y(j.first));
+    }
+    re(nNodes + i) /= inertia(i);
+  }
+  for (std::size_t i = nInertia; i < nNodes; ++i) {
+    re(i) = power(i) + fluc(i);
     for (auto &j : adjacencyList[i]) {
       re(i) -= j.second * std::sin(y(i) - y(j.first));
     }
@@ -659,39 +866,37 @@ void Network::saveData(std::string path, std::string type, int se, bool time) {
 }
 
 /**
- * Calculate the frequencies of the load buses.
+ * Calculate the derivative of a given matrix at the given points.
  * A second order approximation of the derivative is used. To obtain the values
  * for an unevenly spaced grid the algorithm described in B. Fornberg, Math.
  * Comp. 51, 699 (1988). is implemented.
  */
-arma::mat Network::calculateLoadFrequencies() {
-  arma::mat re(nNodes - nInertia, yData.n_cols);
+arma::mat Network::derivative(arma::vec &t, arma::mat &y) {
+  arma::mat re(nNodes - nInertia, y.n_cols);
   arma::span ix{arma::span(nInertia, nNodes - 1)};
-  std::size_t NN{yData.n_cols};
+  std::size_t NN{y.n_cols};
 
   // For the edge cases use a forward / backward differences method
-  re.col(0) = ((2 * t(0) - t(1) - t(2)) / ((t(1) - t(0)) * (t(2) - t(0))) *
-                   yData(ix, 0) +
-               (t(2) - t(0)) / ((t(1) - t(0)) * (t(2) - t(1))) * yData(ix, 1) -
-               (t(1) - t(0)) / ((t(2) - t(0)) * (t(2) - t(1))) * yData(ix, 2));
-  re.col(NN - 1) = ((2 * t(NN - 1) - t(NN - 2) - t(NN - 3)) /
-                        ((t(NN - 1) - t(NN - 3)) * (t(NN - 1) - t(NN - 2))) *
-                        yData(ix, NN - 1) -
-                    (t(NN - 1) - t(NN - 3)) /
-                        ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 2))) *
-                        yData(ix, NN - 2) +
-                    (t(NN - 1) - t(NN - 2)) /
-                        ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 3))) *
-                        yData(ix, NN - 3));
+  re.col(0) =
+      ((2 * t(0) - t(1) - t(2)) / ((t(1) - t(0)) * (t(2) - t(0))) * y(ix, 0) +
+       (t(2) - t(0)) / ((t(1) - t(0)) * (t(2) - t(1))) * y(ix, 1) -
+       (t(1) - t(0)) / ((t(2) - t(0)) * (t(2) - t(1))) * y(ix, 2));
+  re.col(NN - 1) =
+      ((2 * t(NN - 1) - t(NN - 2) - t(NN - 3)) /
+           ((t(NN - 1) - t(NN - 3)) * (t(NN - 1) - t(NN - 2))) * y(ix, NN - 1) -
+       (t(NN - 1) - t(NN - 3)) /
+           ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 2))) * y(ix, NN - 2) +
+       (t(NN - 1) - t(NN - 2)) /
+           ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 3))) * y(ix, NN - 3));
 
   // For the central points use cenetered differences method
   for (std::size_t i = 1; i < NN - 1; ++i) {
     re.col(i) =
         ((t(i) - t(i + 1)) / ((t(i) - t(i - 1)) * (t(i + 1) - t(i - 1))) *
-             yData(ix, i - 1) +
-         (1 / (t(i) - t(i - 1)) - 1 / (t(i + 1) - t(i))) * yData(ix, i) +
+             y(ix, i - 1) +
+         (1 / (t(i) - t(i - 1)) - 1 / (t(i + 1) - t(i))) * y(ix, i) +
          (t(i) - t(i - 1)) / ((t(i + 1) - t(i - 1)) * (t(i + 1) - t(i))) *
-             yData(ix, i + 1));
+             y(ix, i + 1));
   }
   return re;
 }

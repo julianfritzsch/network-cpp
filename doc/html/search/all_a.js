@@ -6,6 +6,7 @@ var searchData=
   ['nnodes_3',['nNodes',['../classnet_1_1_network.html#aaf947805b0b972411272410ae1104405',1,'net::Network']]],
   ['noise_4',['noise',['../classnet_1_1_network.html#a78e9c067292f0c9d9d7ba5e687e23917',1,'net::Network::noise(std::size_t node, double tau0, double stddev)'],['../classnet_1_1_network.html#afd7f7ffa977be8dad2d77c8726e740eb',1,'net::Network::noise(std::size_t node, double tau0, double stddev, unsigned int seed)']]],
   ['noiseindices_5',['noiseIndices',['../classnet_1_1_network.html#a4059beae94ab1cca374e5eb3526da924',1,'net::Network']]],
-  ['noiseper_6',['noisePer',['../classnet_1_1_network.html#ae8388e15456ff2aae6343e1c7cf77ace',1,'net::Network']]],
-  ['normaldist_7',['normalDist',['../classnet_1_1_network.html#a169492624edad855a7b50247993189f3',1,'net::Network']]]
+  ['noiseinter_6',['noiseInter',['../classnet_1_1_network.html#a534a1b4d0677a5e677e18e4b105aaa73',1,'net::Network']]],
+  ['noiseper_7',['noisePer',['../classnet_1_1_network.html#ae8388e15456ff2aae6343e1c7cf77ace',1,'net::Network']]],
+  ['normaldist_8',['normalDist',['../classnet_1_1_network.html#a169492624edad855a7b50247993189f3',1,'net::Network']]]
 ];

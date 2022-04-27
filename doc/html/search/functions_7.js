@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['plotresults_0',['plotResults',['../classnet_1_1_network.html#aaff237cb337f7092ddb2f9ccc9cc9fa4',1,'net::Network::plotResults(std::string type=&quot;frequency&quot;)'],['../classnet_1_1_network.html#aa0a5e38e713f159a45c5f80f3ef7f57e',1,'net::Network::plotResults(std::string areafile, std::string type=&quot;frequency&quot;)']]]
+  ['network_0',['Network',['../classnet_1_1_network.html#a19dd5f759c437e719f7537ee4e6acb5a',1,'net::Network::Network(std::string adjlist, std::string coeffs)'],['../classnet_1_1_network.html#ab6bc03afc45dc9504e6896946883b5a3',1,'net::Network::Network(std::string adjlist, std::string coeffs, std::string angles)']]],
+  ['noise_1',['noise',['../classnet_1_1_network.html#a78e9c067292f0c9d9d7ba5e687e23917',1,'net::Network::noise(std::size_t node, double tau0, double stddev)'],['../classnet_1_1_network.html#afd7f7ffa977be8dad2d77c8726e740eb',1,'net::Network::noise(std::size_t node, double tau0, double stddev, unsigned int seed)']]]
 ];

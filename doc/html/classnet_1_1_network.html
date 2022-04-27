@@ -94,9 +94,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:afbebf20d2854a9139803bc7caae178ae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#afbebf20d2854a9139803bc7caae178ae">box</a> (std::size_t node, double powerChange, double time)</td></tr>
 <tr class="memdesc:afbebf20d2854a9139803bc7caae178ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a box perturbation.  <a href="classnet_1_1_network.html#afbebf20d2854a9139803bc7caae178ae">More...</a><br /></td></tr>
 <tr class="separator:afbebf20d2854a9139803bc7caae178ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0a0192a04ae98a65f377399ef7ec932"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#ab0a0192a04ae98a65f377399ef7ec932">dynamicalSimulation</a> (double t0, double tf, std::string method=&quot;midpoint&quot;, double dt=5.0e-3, double dtMax=1e-1, double eps=1.0e-3, int maxTries=40)</td></tr>
-<tr class="memdesc:ab0a0192a04ae98a65f377399ef7ec932"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a dynamical simulation.  <a href="classnet_1_1_network.html#ab0a0192a04ae98a65f377399ef7ec932">More...</a><br /></td></tr>
-<tr class="separator:ab0a0192a04ae98a65f377399ef7ec932"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c2df388240e8a6d6dfa5fc0045aeea1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a6c2df388240e8a6d6dfa5fc0045aeea1">dynamicalSimulation</a> (double t0, double tf, std::string method=&quot;midpoint&quot;, double dt=5.0e-3, double dtMax=1.0e-1, double eps=1.0e-3, int maxTries=40)</td></tr>
+<tr class="memdesc:a6c2df388240e8a6d6dfa5fc0045aeea1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a dynamical simulation.  <a href="classnet_1_1_network.html#a6c2df388240e8a6d6dfa5fc0045aeea1">More...</a><br /></td></tr>
+<tr class="separator:a6c2df388240e8a6d6dfa5fc0045aeea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5b3fbd0ae5a205e1fab52d4f268f62f0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a5b3fbd0ae5a205e1fab52d4f268f62f0">saveData</a> (std::string path, std::string type=&quot;frequency&quot;, int se=10, bool time=true)</td></tr>
 <tr class="memdesc:a5b3fbd0ae5a205e1fab52d4f268f62f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save simulation data.  <a href="classnet_1_1_network.html#a5b3fbd0ae5a205e1fab52d4f268f62f0">More...</a><br /></td></tr>
 <tr class="separator:a5b3fbd0ae5a205e1fab52d4f268f62f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -131,12 +131,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setInitialAngles</b> 
 <tr class="memitem:a6c311715ffea52fbb6193b7d36b27be3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a6c311715ffea52fbb6193b7d36b27be3">setInitialAngles</a> (std::string angles)</td></tr>
 <tr class="memdesc:a6c311715ffea52fbb6193b7d36b27be3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set initial angles to given values.  <a href="classnet_1_1_network.html#a6c311715ffea52fbb6193b7d36b27be3">More...</a><br /></td></tr>
 <tr class="separator:a6c311715ffea52fbb6193b7d36b27be3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a086db0c0e6c35b64434943a45536196c"><td class="memItemLeft" align="right" valign="top">arma::mat&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a086db0c0e6c35b64434943a45536196c">calculateLoadFrequencies</a> ()</td></tr>
-<tr class="memdesc:a086db0c0e6c35b64434943a45536196c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the frequencies of the load buses.  <a href="classnet_1_1_network.html#a086db0c0e6c35b64434943a45536196c">More...</a><br /></td></tr>
-<tr class="separator:a086db0c0e6c35b64434943a45536196c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af564e2317cdfa1d19c21ac2866fd58bc"><td class="memItemLeft" align="right" valign="top">arma::mat&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#af564e2317cdfa1d19c21ac2866fd58bc">derivative</a> (arma::vec &amp;<a class="el" href="classnet_1_1_network.html#aeed5841bc5258a127debc735487e1b8d">t</a>, arma::mat &amp;y)</td></tr>
+<tr class="memdesc:af564e2317cdfa1d19c21ac2866fd58bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the derivative of a given matrix at the given points.  <a href="classnet_1_1_network.html#af564e2317cdfa1d19c21ac2866fd58bc">More...</a><br /></td></tr>
+<tr class="separator:af564e2317cdfa1d19c21ac2866fd58bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af83220c73a1270135b1cf89d824a54d9"><td class="memItemLeft" align="right" valign="top">arma::vec&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#af83220c73a1270135b1cf89d824a54d9">f</a> (arma::vec y)</td></tr>
 <tr class="memdesc:af83220c73a1270135b1cf89d824a54d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return function value.  <a href="classnet_1_1_network.html#af83220c73a1270135b1cf89d824a54d9">More...</a><br /></td></tr>
 <tr class="separator:af83220c73a1270135b1cf89d824a54d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a584023f4fe7240963bc10ab3f41eb007"><td class="memItemLeft" align="right" valign="top">arma::vec&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a584023f4fe7240963bc10ab3f41eb007">f</a> (arma::vec y, double <a class="el" href="classnet_1_1_network.html#aeed5841bc5258a127debc735487e1b8d">t</a>)</td></tr>
+<tr class="memdesc:a584023f4fe7240963bc10ab3f41eb007"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return function value with noise applied.  <a href="classnet_1_1_network.html#a584023f4fe7240963bc10ab3f41eb007">More...</a><br /></td></tr>
+<tr class="separator:a584023f4fe7240963bc10ab3f41eb007"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a113c7a67b776c9b2fe55b46d567abffb"><td class="memItemLeft" align="right" valign="top">arma::sp_mat&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a113c7a67b776c9b2fe55b46d567abffb">df</a> (arma::vec &amp;y)</td></tr>
 <tr class="memdesc:a113c7a67b776c9b2fe55b46d567abffb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the Jacobian for specific values of theta.  <a href="classnet_1_1_network.html#a113c7a67b776c9b2fe55b46d567abffb">More...</a><br /></td></tr>
 <tr class="separator:a113c7a67b776c9b2fe55b46d567abffb"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -146,9 +149,15 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>setInitialAngles</b> 
 <tr class="memitem:a041985bcca0cf9e433dc9f2365c78167"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a041985bcca0cf9e433dc9f2365c78167">midpointNoise</a> (double t0, double tf, double dt=5.0e-3)</td></tr>
 <tr class="memdesc:a041985bcca0cf9e433dc9f2365c78167"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a dynamical simulation.  <a href="classnet_1_1_network.html#a041985bcca0cf9e433dc9f2365c78167">More...</a><br /></td></tr>
 <tr class="separator:a041985bcca0cf9e433dc9f2365c78167"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a138cd8c992b65548f639e1f41e39c3b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a138cd8c992b65548f639e1f41e39c3b9">kapsRentrop</a> (double t0, double tf, double dtStart=5.0e-3, double dtMax=1e-1, double eps=1.0e-3, int maxTries=40)</td></tr>
-<tr class="memdesc:a138cd8c992b65548f639e1f41e39c3b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a dynamical simulation.  <a href="classnet_1_1_network.html#a138cd8c992b65548f639e1f41e39c3b9">More...</a><br /></td></tr>
-<tr class="separator:a138cd8c992b65548f639e1f41e39c3b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ca2441781b6b97ce38114537d1da339"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a2ca2441781b6b97ce38114537d1da339">kapsRentrop</a> (double t0, double tf, double dtStart=5.0e-3, double dtMax=1.0e-1, double eps=1.0e-3, int maxTries=40)</td></tr>
+<tr class="memdesc:a2ca2441781b6b97ce38114537d1da339"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a dynamical simulation.  <a href="classnet_1_1_network.html#a2ca2441781b6b97ce38114537d1da339">More...</a><br /></td></tr>
+<tr class="separator:a2ca2441781b6b97ce38114537d1da339"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3a0996cec12b60bb633490d1372c3e0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#ad3a0996cec12b60bb633490d1372c3e0">kapsRentropNoise</a> (double t0, double tf, double dtStart=5.0e-3, double dtMax=1.0e-1, double eps=1.0e-3, int maxTries=40)</td></tr>
+<tr class="memdesc:ad3a0996cec12b60bb633490d1372c3e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Run a dynamical simulation.  <a href="classnet_1_1_network.html#ad3a0996cec12b60bb633490d1372c3e0">More...</a><br /></td></tr>
+<tr class="separator:ad3a0996cec12b60bb633490d1372c3e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5827366125f4a0792d9278ba9d4619ec"><td class="memItemLeft" align="right" valign="top">arma::vec&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classnet_1_1_network.html#a5827366125f4a0792d9278ba9d4619ec">interpolate</a> (arma::vec &amp;tpoints, arma::mat &amp;ypoints, double <a class="el" href="classnet_1_1_network.html#aeed5841bc5258a127debc735487e1b8d">t</a>)</td></tr>
+<tr class="memdesc:a5827366125f4a0792d9278ba9d4619ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Interpolate noise.  <a href="classnet_1_1_network.html#a5827366125f4a0792d9278ba9d4619ec">More...</a><br /></td></tr>
+<tr class="separator:a5827366125f4a0792d9278ba9d4619ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pri-attribs" name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -226,12 +235,18 @@ std::vector&lt; std::mt19937 &gt;&#160;</td><td class="memItemRight" valign="bot
 std::vector&lt; std::normal_distribution&lt;&gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>normalDist</b></td></tr>
 <tr class="memdesc:a169492624edad855a7b50247993189f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector of normal distributions. <br /></td></tr>
 <tr class="separator:a169492624edad855a7b50247993189f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd20beb31cf328d23e71d18b9018cfd6"><td class="memItemLeft" align="right" valign="top"><a id="abd20beb31cf328d23e71d18b9018cfd6" name="abd20beb31cf328d23e71d18b9018cfd6"></a>
+arma::vec&#160;</td><td class="memItemRight" valign="bottom"><b>tInter</b></td></tr>
+<tr class="memdesc:abd20beb31cf328d23e71d18b9018cfd6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Vector of time stamps for noise interpolation. <br /></td></tr>
+<tr class="separator:abd20beb31cf328d23e71d18b9018cfd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a534a1b4d0677a5e677e18e4b105aaa73"><td class="memItemLeft" align="right" valign="top"><a id="a534a1b4d0677a5e677e18e4b105aaa73" name="a534a1b4d0677a5e677e18e4b105aaa73"></a>
+arma::mat&#160;</td><td class="memItemRight" valign="bottom"><b>noiseInter</b></td></tr>
+<tr class="memdesc:a534a1b4d0677a5e677e18e4b105aaa73"><td class="mdescLeft">&#160;</td><td class="mdescRight">Matrix of pre-generated noise for interpolation. <br /></td></tr>
+<tr class="separator:a534a1b4d0677a5e677e18e4b105aaa73"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >Simulate electrical power networks. </p>
-<p >Create an electric power network from an adjacency list and a list of coefficients. Functionality to create various faults such as step and box perturbations and noisy fluctuations (to be implemented). The dynamic behavior can be simulated using various numerical methods and the results exported to a file. Also provides basic plotting functionality. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd><p class="startdd">Add explicit solvers for non-stiff problems </p>
-<p class="enddd">Add possibility to use noise as perturbation </p>
-</dd></dl>
+<p >Create an electric power network from an adjacency list and a list of coefficients. Functionality to create various faults such as step and box perturbations and noisy fluctuations (to be implemented). The dynamic behavior can be simulated using various numerical methods and the results exported to a file. Also provides basic plotting functionality. </p><dl class="todo"><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>Add explicit solvers for non-stiff problems </dd></dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a19dd5f759c437e719f7537ee4e6acb5a" name="a19dd5f759c437e719f7537ee4e6acb5a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a19dd5f759c437e719f7537ee4e6acb5a">&#9670;&nbsp;</a></span>Network() <span class="overload">[1/2]</span></h2>
@@ -359,34 +374,6 @@ std::vector&lt; std::normal_distribution&lt;&gt; &gt;&#160;</td><td class="memIt
 
 </div>
 </div>
-<a id="a086db0c0e6c35b64434943a45536196c" name="a086db0c0e6c35b64434943a45536196c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a086db0c0e6c35b64434943a45536196c">&#9670;&nbsp;</a></span>calculateLoadFrequencies()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">arma::mat net::Network::calculateLoadFrequencies </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Calculate the frequencies of the load buses. </p>
-<p >A second order approximation of the derivative is used. To obtain the values for an unevenly spaced grid the algorithm described in B. Fornberg, Math. Comp. 51, 699 (1988). is implemented. </p>
-
-</div>
-</div>
 <a id="abe77574df1896e434b8a634138511685" name="abe77574df1896e434b8a634138511685"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abe77574df1896e434b8a634138511685">&#9670;&nbsp;</a></span>createAdjlist()</h2>
 
@@ -456,6 +443,45 @@ std::vector&lt; std::normal_distribution&lt;&gt; &gt;&#160;</td><td class="memIt
 
 </div>
 </div>
+<a id="af564e2317cdfa1d19c21ac2866fd58bc" name="af564e2317cdfa1d19c21ac2866fd58bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af564e2317cdfa1d19c21ac2866fd58bc">&#9670;&nbsp;</a></span>derivative()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">arma::mat net::Network::derivative </td>
+          <td>(</td>
+          <td class="paramtype">arma::vec &amp;&#160;</td>
+          <td class="paramname"><em>t</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">arma::mat &amp;&#160;</td>
+          <td class="paramname"><em>y</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Calculate the derivative of a given matrix at the given points. </p>
+<p >A second order approximation of the derivative is used. To obtain the values for an unevenly spaced grid the algorithm described in B. Fornberg, Math. Comp. 51, 699 (1988). is implemented. </p>
+
+</div>
+</div>
 <a id="a113c7a67b776c9b2fe55b46d567abffb" name="a113c7a67b776c9b2fe55b46d567abffb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a113c7a67b776c9b2fe55b46d567abffb">&#9670;&nbsp;</a></span>df()</h2>
 
@@ -494,8 +520,8 @@ std::vector&lt; std::normal_distribution&lt;&gt; &gt;&#160;</td><td class="memIt
 
 </div>
 </div>
-<a id="ab0a0192a04ae98a65f377399ef7ec932" name="ab0a0192a04ae98a65f377399ef7ec932"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab0a0192a04ae98a65f377399ef7ec932">&#9670;&nbsp;</a></span>dynamicalSimulation()</h2>
+<a id="a6c2df388240e8a6d6dfa5fc0045aeea1" name="a6c2df388240e8a6d6dfa5fc0045aeea1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c2df388240e8a6d6dfa5fc0045aeea1">&#9670;&nbsp;</a></span>dynamicalSimulation()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -528,7 +554,7 @@ std::vector&lt; std::normal_distribution&lt;&gt; &gt;&#160;</td><td class="memIt
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>dtMax</em> = <code>1e-1</code>, </td>
+          <td class="paramname"><em>dtMax</em> = <code>1.0e-1</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -567,7 +593,7 @@ std::vector&lt; std::normal_distribution&lt;&gt; &gt;&#160;</td><td class="memIt
 </div>
 </div>
 <a id="af83220c73a1270135b1cf89d824a54d9" name="af83220c73a1270135b1cf89d824a54d9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af83220c73a1270135b1cf89d824a54d9">&#9670;&nbsp;</a></span>f()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#af83220c73a1270135b1cf89d824a54d9">&#9670;&nbsp;</a></span>f() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -600,8 +626,103 @@ std::vector&lt; std::normal_distribution&lt;&gt; &gt;&#160;</td><td class="memIt
 
 </div>
 </div>
-<a id="a138cd8c992b65548f639e1f41e39c3b9" name="a138cd8c992b65548f639e1f41e39c3b9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a138cd8c992b65548f639e1f41e39c3b9">&#9670;&nbsp;</a></span>kapsRentrop()</h2>
+<a id="a584023f4fe7240963bc10ab3f41eb007" name="a584023f4fe7240963bc10ab3f41eb007"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a584023f4fe7240963bc10ab3f41eb007">&#9670;&nbsp;</a></span>f() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">arma::vec net::Network::f </td>
+          <td>(</td>
+          <td class="paramtype">arma::vec&#160;</td>
+          <td class="paramname"><em>y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>t</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Return function value with noise applied. </p>
+<p >Returns the value of the swing equations for the given angles and frequencies. For a definition of the swing equations see, e.g., A. R. Bergen and V. Vittal, Power Systems Analysis, 2nd ed (Prentice Hall, Upper Saddle River, NJ, 2000). This is the time dependent version for the case of the Kaps-Rentrop method with noise applied. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">y</td><td>Vector containing angles and frequencies </td></tr>
+    <tr><td class="paramname">t</td><td>Time at which the functions are evaluated </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a5827366125f4a0792d9278ba9d4619ec" name="a5827366125f4a0792d9278ba9d4619ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5827366125f4a0792d9278ba9d4619ec">&#9670;&nbsp;</a></span>interpolate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">arma::vec net::Network::interpolate </td>
+          <td>(</td>
+          <td class="paramtype">arma::vec &amp;&#160;</td>
+          <td class="paramname"><em>tpoints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">arma::mat &amp;&#160;</td>
+          <td class="paramname"><em>ypoints</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>t</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Interpolate noise. </p>
+<p >Get the noisy perturbation at arbitrary time steps by interpolating the pre-generated noise. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">t</td><td>Time step at which the interpolated value is calculated </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a2ca2441781b6b97ce38114537d1da339" name="a2ca2441781b6b97ce38114537d1da339"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2ca2441781b6b97ce38114537d1da339">&#9670;&nbsp;</a></span>kapsRentrop()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -631,7 +752,7 @@ std::vector&lt; std::normal_distribution&lt;&gt; &gt;&#160;</td><td class="memIt
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>dtMax</em> = <code>1e-1</code>, </td>
+          <td class="paramname"><em>dtMax</em> = <code>1.0e-1</code>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -671,6 +792,82 @@ std::vector&lt; std::normal_distribution&lt;&gt; &gt;&#160;</td><td class="memIt
   </dd>
 </dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd><p class="startdd">Use a different solver to directly obtain LU-decomposition to only do it once per step, that might require rewriting this library using Eigen </p>
+<p class="enddd">Change data storage to avoid constant reallocations </p>
+</dd></dl>
+
+</div>
+</div>
+<a id="ad3a0996cec12b60bb633490d1372c3e0" name="ad3a0996cec12b60bb633490d1372c3e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3a0996cec12b60bb633490d1372c3e0">&#9670;&nbsp;</a></span>kapsRentropNoise()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void net::Network::kapsRentropNoise </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>t0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>tf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dtStart</em> = <code>5.0e-3</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>dtMax</em> = <code>1.0e-1</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>eps</em> = <code>1.0e-3</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>maxTries</em> = <code>40</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Run a dynamical simulation. </p>
+<p >Run a dynamical simulation using the fourth order Kaps-Rentrop method with adaptive stepsize. This method is more precise and stable but considerably slower as it require 4 linear systems to be solved at every step. For a description of the algorithm and the different constants see J. R. Winkler, Endeavour 17, 201 (1993). This functions sets the values of <a class="el" href="classnet_1_1_network.html#aeed5841bc5258a127debc735487e1b8d" title="Vector containing time stamps after a dynamical simulation.">Network::t</a> and <a class="el" href="classnet_1_1_network.html#a251a86b1746604f22bc3d6bae9a8e3b6" title="Angle and frequency data.">Network::yData</a>. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">t0</td><td>Start time </td></tr>
+    <tr><td class="paramname">tf</td><td>Finish time </td></tr>
+    <tr><td class="paramname">dtStart</td><td>First time step </td></tr>
+    <tr><td class="paramname">dtMax</td><td>Maximum allowed time step </td></tr>
+    <tr><td class="paramname">eps</td><td>Maximum allowed error at each step. <img class="formulaInl" alt="$\text{error} &lt; \varepsilon y + \varepsilon$" src="form_0.png" width="78" height="11"/> </td></tr>
+    <tr><td class="paramname">maxTries</td><td>Maximum allowed tries for one step. The method will abort if maxTries is reached. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd><p class="startdd">Use a different solver to directly obtain LU-decomposition to only do it once per step, that might require rewriting this library using Eigen </p>
 <p class="enddd">Change data storage to avoid constant reallocations </p>
 </dd></dl>
 
@@ -1024,7 +1221,7 @@ correlated Gaussian random numbers" (2002). </p><dl class="params"><dt>Parameter
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>Allow to specify single machines </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>Allow to specify single machines </dd></dl>
 
 </div>
 </div>
