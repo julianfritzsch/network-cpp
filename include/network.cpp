@@ -20,6 +20,7 @@
 #include <matplot/matplot.h>
 
 #include <iostream>
+#include <list>
 #include <random>
 #include <string>
 #include <utility>
@@ -37,6 +38,8 @@ Network::Network(std::string adjlist, std::string coeffs) {
   createAdjlist(adjlist);
   createCoeffLists(coeffs);
   setInitialAngles();
+  std::cout << "Network set up. There are " << nNodes << " nodes out of which "
+            << nInertia << " have inertia.\n";
 }
 
 /**
@@ -258,13 +261,16 @@ void Network::dynamicalSimulation(double t0, double tf, std::string method,
   } else if (method == "kapsrentrop" && !noisePer) {
     kapsRentrop(t0, tf, dt, dtMax, eps, maxTries);
   } else if (method == "kapsrentrop" && noisePer) {
-    // std::cout << "The Kaps-Rentrop method is not yet implemented for a noisy
-    // "
-    //              "perturbation. Using the midpoint method instead.\n";
-    // midpointNoise(t0, tf, dt);
     kapsRentropNoise(t0, tf, dt, dtMax, eps, maxTries);
+  } else if (method == "cashkarp" && !noisePer) {
+    cashKarp(t0, tf, dt, dtMax, eps, maxTries);
+  } else if (method == "cashkarp" && noisePer) {
+    std::cout << "Method \"cashkarp\" not yet implemented for a noisy "
+                 "perturbation, try \"midpoint\" or \"kapsrentrop\".\n";
+    // kapsRentropNoise(t0, tf, dt, dtMax, eps, maxTries);
   } else {
-    std::cout << "Method not found. Must be \"midpoint\" or \"kapsrentrop\".\n";
+    std::cout << "Method not found. Must be \"midpoint\", \"kapsrentrop\", or "
+                 "\"cashkarp\".\n";
   }
 }
 
@@ -332,7 +338,8 @@ void Network::midpoint(double t0, double tf, double dt) {
   yData.col(nSteps - 1) = y;
 
   // Insert the load frequencies
-  yData.insert_rows(yData.n_rows, derivative(t, yData));
+  arma::mat tmpTheta{yData.head_rows(nNodes - nInertia)};
+  yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
   std::cout << "Final max omega: "
             << arma::max(
                    arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
@@ -417,7 +424,8 @@ void Network::midpointNoise(double t0, double tf, double dt) {
   yData.col(nSteps - 1) = y;
 
   // Insert the load frequencies
-  yData.insert_rows(yData.n_rows, derivative(t, yData));
+  arma::mat tmpTheta{yData.head_rows(nNodes - nInertia)};
+  yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
   std::cout << "Final max omega: "
             << arma::max(
                    arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
@@ -536,7 +544,8 @@ void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
   }
 
   // Insert load frequency data
-  yData.insert_rows(yData.n_rows, derivative(t, yData));
+  arma::mat tmpTheta{yData.head_rows(nNodes - nInertia)};
+  yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
   std::cout << "Final max omega: "
             << arma::max(
                    arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
@@ -688,7 +697,160 @@ void Network::kapsRentropNoise(double t0, double tf, double dtStart,
   }
 
   // Insert load frequency data
-  yData.insert_rows(yData.n_rows, derivative(t, yData));
+  arma::mat tmpTheta{yData.head_rows(nNodes - nInertia)};
+  yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
+  std::cout << "Final max omega: "
+            << arma::max(
+                   arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+            << "\n";
+}
+
+/**
+ * Run a dynamical simulation.
+ * Run a dynamical simulation using the fifth order Cash-Karp method with
+ * adaptive stepsize. This method is explict and therefore only useful for
+ * non-stiff problems. For a description of the algorithm and the different
+ * constants see J. R. Cash and A. H. Karp, ACM Trans. Math. Softw. 16, 201
+ * (1990). This functions sets the values of Network::t and Network::yData.
+ * @param t0 Start time
+ * @param tf Finish time
+ * @param dtStart First time step
+ * @param dtMax Maximum allowed time step
+ * @param eps Maximum allowed error at each step. \f$\text{error} < \varepsilon
+ * y + \varepsilon\f$
+ * @param maxTries Maximum allowed tries for one step. The method will abort if
+ * maxTries is reached.
+ * @todo Use a different solver to directly obtain LU-decomposition to only do
+ * it once per step, that might require rewriting this library using Eigen
+ * @todo Change data storage to avoid constant reallocations
+ */
+void Network::cashKarp(double t0, double tf, double dtStart, double dtMax,
+                       double eps, int maxTries) {
+  // Setup constants
+  // const double a1{1.0 / 5.0};
+  // const double a2{3.0 / 10.0};
+  // const double a3{3.0 / 5.0};
+  // const double a4{1.0};
+  // const double a5{7.0 / 8.0};
+  const double b21{1.0 / 5.0};
+  const double b31{3.0 / 40.0};
+  const double b32{9.0 / 40.0};
+  const double b41{3.0 / 10.0};
+  const double b42{-9.0 / 10.0};
+  const double b43{6.0 / 5.0};
+  const double b51{-11.0 / 54.0};
+  const double b52{5.0 / 2.0};
+  const double b53{-70.0 / 27.0};
+  const double b54{35.0 / 27.0};
+  const double b61{1631.0 / 55296.0};
+  const double b62{175.0 / 512.0};
+  const double b63{575.0 / 13824.0};
+  const double b64{44275.0 / 110592.0};
+  const double b65{253.0 / 4096.0};
+  const double c1{37.0 / 378.0};
+  const double c2{0.0};
+  const double c3{250.0 / 621.0};
+  const double c4{125.0 / 594.0};
+  const double c5{0.0};
+  const double c6{512.0 / 1771.0};
+  const double c1s{2825.0 / 27648.0};
+  const double c2s{0.0};
+  const double c3s{18575.0 / 48384.0};
+  const double c4s{13525.0 / 55296.0};
+  const double c5s{277.0 / 14336.0};
+  const double c6s{1.0 / 4.0};
+
+  // Setup initial values
+  double tt{t0};
+  double dt{1e-3};
+  arma::vec y{arma::join_cols(initAngles, arma::vec(nInertia))};
+
+  // The data is saved in chunks that are then pushed into a list when they are
+  // full. This saves us from having to constantly reallocate data without pre
+  // allocating huge amounts of data
+  std::size_t chunkSize = 10000;
+  arma::mat chunk(nNodes + nInertia, chunkSize);
+  std::list<arma::mat> chunks;
+  arma::vec tchunk(chunkSize);
+  std::list<arma::vec> tchunks;
+  chunk.col(0) = y;
+  tchunk(0) = tt;
+
+  // Create needed arrays
+  arma::vec k1, k2, k3, k4, k5, k6, fval, err, yscale;
+  int tries{0};
+  eps = 1e-8;
+  int steps{0};
+
+  // Main loop
+  while (tt < tf) {
+    // Do one step
+    yscale = eps * arma::abs(y) + eps;
+    k1 = dt * f(y);
+    k2 = dt * f(y + b21 * k1);
+    k3 = dt * f(y + b31 * k1 + b32 * k2);
+    k4 = dt * f(y + b41 * k1 + b42 * k2 + b43 * k3);
+    k5 = dt * f(y + b51 * k1 + b52 * k2 + b53 * k3 + b54 * k4);
+    k6 = dt * f(y + b61 * k1 + b62 * k2 + b63 * k3 + b64 * k4 + b65 * k5);
+    // Error calculation. If error < 1 save data and increase step size, else
+    // decrease and redo step
+    err = (c1 - c1s) * k1 + (c2 - c2s) * k2 + (c3 - c3s) * k3 +
+          (c4 - c4s) * k4 + (c5 - c5s) * k5 + (c6 - c6s) * k6;
+    double error = arma::max(arma::abs(err / yscale));
+    if (error < 1) {
+      y += c1 * k1 + c2 * k2 + c3 * k3 + c4 * k4 + c5 * k5 + c6 * k6;
+      tt += dt;
+      dt = std::min(0.95 * std::pow(1.0 / error, 1.0 / 5.0) * dt,
+                    std::min(1.5 * dt, dtMax));
+      //   dt = 1.0e-3;
+      tries = 0;
+      steps++;
+      if (steps % chunkSize == 0) {
+        chunks.push_back(chunk);
+        tchunks.push_back(tchunk);
+      }
+      chunk.col(steps % chunkSize) = y;
+      tchunk(steps % chunkSize) = tt;
+      // Print some useful information
+      std::cout << std::fixed << std::setprecision(1)
+                << (tt - t0) / (tf - t0) * 100
+                << "%\nMax omega: " << std::setprecision(4)
+                << arma::max(
+                       arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+                << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
+    } else {
+      dt = std::max(0.95 * std::pow(1.0 / error, 1.0 / 4.0) * dt, 0.5 * dt);
+      if (dt < 1.0e-7) {
+        std::cout << "Step size effectively zero at t = " << tt << '.'
+                  << std::endl;
+        break;
+      }
+      tries++;
+      if (tries == maxTries) {
+        std::cout << "Max tries reached!\n";
+        break;
+      }
+    }
+  }
+
+  // Stitch the chunks together
+  yData = arma::mat(nNodes + nInertia, steps + 1);
+  t = arma::vec(steps + 1);
+  std::size_t i{0};
+  while (!chunks.empty()) {
+    yData.cols(i * chunkSize, (i + 1) * chunkSize - 1) = chunks.front();
+    t.rows(i * chunkSize, (i + 1) * chunkSize - 1) = tchunks.front();
+    chunks.pop_front();
+    tchunks.pop_front();
+    ++i;
+  }
+  yData.tail_cols(steps % chunkSize + 1) =
+      chunk.head_cols(steps % chunkSize + 1);
+  t.tail_rows(steps % chunkSize + 1) = tchunk.head_rows(steps % chunkSize + 1);
+
+  // Insert load frequency data
+  arma::mat tmpTheta{yData.head_rows(nNodes - nInertia)};
+  yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
   std::cout << "Final max omega: "
             << arma::max(
                    arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
@@ -844,7 +1006,6 @@ void Network::saveData(std::string path, std::string type, int se, bool time) {
   if (type == "frequency") {
     if (time) {
       arma::mat tmp = arma::join_cols(arma::conv_to<arma::rowvec>::from(t),
-                                      // ydata.rows(N, N + Nin - 1));
                                       yData.rows(nNodes, 2 * nNodes - 1));
       arma::conv_to<arma::mat>::from(tmp.cols(ix)).save(path, arma::csv_ascii);
     } else {
@@ -855,7 +1016,7 @@ void Network::saveData(std::string path, std::string type, int se, bool time) {
   } else if (type == "angles") {
     if (time) {
       arma::mat tmp = arma::join_cols(arma::conv_to<arma::rowvec>::from(t),
-                                      yData.rows(0, nNodes - 1));
+                                      yData.head_rows(nNodes));
       arma::conv_to<arma::mat>::from(tmp.cols(ix)).save(path, arma::csv_ascii);
     } else {
       arma::conv_to<arma::mat>::from(
@@ -872,31 +1033,30 @@ void Network::saveData(std::string path, std::string type, int se, bool time) {
  * Comp. 51, 699 (1988). is implemented.
  */
 arma::mat Network::derivative(arma::vec &t, arma::mat &y) {
-  arma::mat re(nNodes - nInertia, y.n_cols);
-  arma::span ix{arma::span(nInertia, nNodes - 1)};
+  arma::mat re(y.n_rows, y.n_cols);
   std::size_t NN{y.n_cols};
 
   // For the edge cases use a forward / backward differences method
   re.col(0) =
-      ((2 * t(0) - t(1) - t(2)) / ((t(1) - t(0)) * (t(2) - t(0))) * y(ix, 0) +
-       (t(2) - t(0)) / ((t(1) - t(0)) * (t(2) - t(1))) * y(ix, 1) -
-       (t(1) - t(0)) / ((t(2) - t(0)) * (t(2) - t(1))) * y(ix, 2));
+      ((2 * t(0) - t(1) - t(2)) / ((t(1) - t(0)) * (t(2) - t(0))) * y.col(0) +
+       (t(2) - t(0)) / ((t(1) - t(0)) * (t(2) - t(1))) * y.col(1) -
+       (t(1) - t(0)) / ((t(2) - t(0)) * (t(2) - t(1))) * y.col(2));
   re.col(NN - 1) =
       ((2 * t(NN - 1) - t(NN - 2) - t(NN - 3)) /
-           ((t(NN - 1) - t(NN - 3)) * (t(NN - 1) - t(NN - 2))) * y(ix, NN - 1) -
+           ((t(NN - 1) - t(NN - 3)) * (t(NN - 1) - t(NN - 2))) * y.col(NN - 1) -
        (t(NN - 1) - t(NN - 3)) /
-           ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 2))) * y(ix, NN - 2) +
+           ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 2))) * y.col(NN - 2) +
        (t(NN - 1) - t(NN - 2)) /
-           ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 3))) * y(ix, NN - 3));
+           ((t(NN - 2) - t(NN - 3)) * (t(NN - 1) - t(NN - 3))) * y.col(NN - 3));
 
   // For the central points use cenetered differences method
   for (std::size_t i = 1; i < NN - 1; ++i) {
     re.col(i) =
         ((t(i) - t(i + 1)) / ((t(i) - t(i - 1)) * (t(i + 1) - t(i - 1))) *
-             y(ix, i - 1) +
-         (1 / (t(i) - t(i - 1)) - 1 / (t(i + 1) - t(i))) * y(ix, i) +
+             y.col(i - 1) +
+         (1 / (t(i) - t(i - 1)) - 1 / (t(i + 1) - t(i))) * y.col(i) +
          (t(i) - t(i - 1)) / ((t(i + 1) - t(i - 1)) * (t(i + 1) - t(i))) *
-             y(ix, i + 1));
+             y.col(i + 1));
   }
   return re;
 }

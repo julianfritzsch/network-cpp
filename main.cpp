@@ -58,14 +58,22 @@ int main(int argv, char **argc) {
   //   tmp.saveData("damping" + i.second + ".csv", "frequency");
   // }
 
-  for (auto &i : scaling) {
-    std::cout << i.second << '\n';
-    net::Network tmp{adjlist, coeffs, angles};
-    tmp.step(419, -9.0);
-    tmp.scaleParameters(i.first, "inertia");
-    tmp.dynamicalSimulation(0, 5, "kapsrentrop", 5.0e-3, 2.5e-2, 5.0e-4);
-    tmp.saveData("inertia" + i.second + ".csv", "frequency", 1);
-  }
+  // for (auto &i : scaling) {
+  //   std::cout << i.second << '\n';
+  //   net::Network tmp{adjlist, coeffs, angles};
+  //   tmp.step(419, -9.0);
+  //   tmp.scaleParameters(i.first, "inertia");
+  //   tmp.dynamicalSimulation(0, 5, "kapsrentrop", 5.0e-3, 2.5e-2, 5.0e-4);
+  //   tmp.saveData("inertia" + i.second + ".csv", "frequency", 1);
+  // }
+  net::Network pantahom{std::string(SOURCE_DIR) + "/data/adjlist.csv",
+                        std::string(SOURCE_DIR) + "/data/coeffshom.csv"};
+  auto start = std::chrono::high_resolution_clock::now();
+  pantahom.dynamicalSimulation(0, 40, "cashkarp");
+  auto end = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  std::cout << duration.count() << std::endl;
+  pantahom.saveData("thetahom.csv", "angles", 1);
 
   return 0;
 }
