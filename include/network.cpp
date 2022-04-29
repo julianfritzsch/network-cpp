@@ -38,8 +38,6 @@ Network::Network(std::string adjlist, std::string coeffs) {
   createAdjlist(adjlist);
   createCoeffLists(coeffs);
   setInitialAngles();
-  std::cout << "Network set up. There are " << nNodes << " nodes out of which "
-            << nInertia << " have inertia.\n";
 }
 
 /**
@@ -301,6 +299,7 @@ void Network::midpoint(double t0, double tf, double dt) {
   t(0) = tt;
 
   // Do first step
+  std::cout << arma::max(arma::abs(f(y))) << std::endl << std::endl;
   arma::mat toinv =
       arma::eye(nNodes + nInertia, nNodes + nInertia) - dt * arma::mat(df(y));
   arma::mat inv = arma::inv(toinv);
@@ -318,12 +317,7 @@ void Network::midpoint(double t0, double tf, double dt) {
       }
     }
     // Save data and print some useful information
-    std::cout << std::fixed << std::setprecision(1)
-              << (tt - t0) / (tf - t0) * 100
-              << "%\nMax omega: " << std::setprecision(4)
-              << arma::max(
-                     arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
-              << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
+    printInfo(t0, tf, tt, y);
     yData.col(i) = y;
     t(i) = tt;
     deltaCurrent += 2 * inv * (dt * f(y) - deltaCurrent);
@@ -404,12 +398,7 @@ void Network::midpointNoise(double t0, double tf, double dt) {
     }
     power = powerref + r;
     // Save data and print some useful information
-    std::cout << std::fixed << std::setprecision(1)
-              << (tt - t0) / (tf - t0) * 100
-              << "%\nMax omega: " << std::setprecision(4)
-              << arma::max(
-                     arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
-              << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
+    printInfo(t0, tf, tt, y);
     yData.col(i) = y;
     t(i) = tt;
     deltaCurrent += 2 * inv * (dt * f(y) - deltaCurrent);
@@ -523,12 +512,7 @@ void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
       yData.insert_cols(yData.n_cols, y);
       t.insert_rows(t.n_rows, arma::rowvec{tt});
       // Print some useful information
-      std::cout << std::fixed << std::setprecision(1)
-                << (tt - t0) / (tf - t0) * 100
-                << "%\nMax omega: " << std::setprecision(4)
-                << arma::max(
-                       arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
-                << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
+      printInfo(t0, tf, tt, y);
     } else {
       dt = std::max(0.95 * std::pow(1.0 / error, 1.0 / 3.0) * dt, 0.5 * dt);
       if (dt < 1.0e-5) {
@@ -546,7 +530,7 @@ void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
   // Insert the load frequencies
   arma::mat tmpTheta{yData.rows(nInertia, nNodes - 1)};
   yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
-  std::cout << "Final max omega: "
+  std::cout << std::defaultfloat << std::setprecision(6) << "Final max omega: "
             << arma::max(arma::abs(
                    yData(arma::span(nNodes, 2 * nNodes - 1), yData.n_cols - 1)))
             << "\n";
@@ -687,12 +671,7 @@ void Network::kapsRentropNoise(double t0, double tf, double dtStart,
       chunk.col(steps % chunkSize) = y;
       tchunk(steps % chunkSize) = tt;
       // Print some useful information
-      std::cout << std::fixed << std::setprecision(1)
-                << (tt - t0) / (tf - t0) * 100
-                << "%\nMax omega: " << std::setprecision(4)
-                << arma::max(
-                       arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
-                << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
+      printInfo(t0, tf, tt, y);
     } else {
       dt = std::max(0.95 * std::pow(1.0 / error, 1.0 / 3.0) * dt, 0.5 * dt);
       if (dt < 1.0e-5) {
@@ -838,16 +817,13 @@ void Network::cashKarp(double t0, double tf, double dtStart, double dtMax,
       chunk.col(steps % chunkSize) = y;
       tchunk(steps % chunkSize) = tt;
       // Print some useful information
-      std::cout << std::fixed << std::setprecision(1)
-                << (tt - t0) / (tf - t0) * 100
-                << "%\nMax omega: " << std::setprecision(4)
-                << arma::max(
-                       arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
-                << "\n\x1b[A\u001b[2K\x1b[A\u001b[2K";
+      printInfo(t0, tf, tt, y);
     } else {
       dt = std::max(0.95 * std::pow(1.0 / error, 1.0 / 4.0) * dt, 0.5 * dt);
-      if (dt < 1.0e-7) {
-        std::cout << "Step size effectively zero at t = " << tt << '.'
+      if (dt < 1.0e-9) {
+        std::cout << "Step size effectively zero at t = " << tt
+                  << ". The system might be stiff. Try an implicit solver like "
+                     "\"midpoint\" or \"kapsrentrop\"."
                   << std::endl;
         break;
       }
@@ -1169,5 +1145,26 @@ void Network::plotResults(std::string areafile, std::string type) {
     matplot::plot(arma::conv_to<arma::vec>::from(t.rows(ix)), tmp, "k");
   }
   matplot::show();
+}
+
+/**
+ * Print useful information during dynamical simulation.
+ * Prints percentage of simulated time span and the current maximum frequency of
+ * the generators for easy debugging.
+ * @param t0 Start time
+ * @param tf Final time
+ * @param tt Current time step
+ * @param y Current data
+ */
+void Network::printInfo(double t0, double tf, double tt, arma::vec &y) {
+  std::cout << std::fixed << std::setprecision(1) << (tt - t0) / (tf - t0) * 100
+            << "%\n";
+  if (nInertia) {
+    std::cout << "Max omega: " << std::setprecision(4)
+              << arma::max(
+                     arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+              << "\n\x1b[A\u001b[2K";
+  }
+  std::cout << "\x1b[A\u001b[2K";
 }
 }  // namespace net

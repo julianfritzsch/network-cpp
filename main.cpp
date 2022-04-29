@@ -33,47 +33,15 @@ int main(int argv, char **argc) {
     }
   }
   std::string adjlist = std::string(SOURCE_DIR) + "/data/adjlist.csv";
-  std::string coeffs = std::string(SOURCE_DIR) + "/data/coeffs.csv";
+  std::string coeffs = std::string(SOURCE_DIR) + "/data/coeffsnoinertia.csv";
   std::string angles = std::string(SOURCE_DIR) + "/data/syncedangles.csv";
 
-  std::vector<std::pair<double, std::string>> scaling{
-      {0.001, "0.001"}, {0.005, "0.005"}, {0.01, "0.01"}  //, {0.05, "0.05"},
-                                                          // {0.1, "0.1"}, {0.5,
-                                                          // "0.5"}, {1, "1"},
-                                                          // {5, "5"},
-                                                          // {10, "10"}
-  };
-
   net::Network panta{adjlist, coeffs, angles};
-  panta.step(419, -9.0);
-  panta.dynamicalSimulation(0, 25, "midpoint", 5.0e-3, 5.0e-2, 1.0e-5);
-  panta.saveData("steptestmid.csv", "frequency", 1);
-
-  // for (auto &i : scaling) {
-  //   std::cout << i.second << '\n';
-  //   net::Network tmp{adjlist, coeffs, angles};
-  //   tmp.step(419, -9.0);
-  //   tmp.scaleParameters(i.first, "damping");
-  //   tmp.dynamicalSimulation(0, 10, "kapsrentrop");
-  //   tmp.saveData("damping" + i.second + ".csv", "frequency");
-  // }
-
-  // for (auto &i : scaling) {
-  //   std::cout << i.second << '\n';
-  //   net::Network tmp{adjlist, coeffs, angles};
-  //   tmp.step(419, -9.0);
-  //   tmp.scaleParameters(i.first, "inertia");
-  //   tmp.dynamicalSimulation(0, 5, "kapsrentrop", 5.0e-3, 2.5e-2, 5.0e-4);
-  //   tmp.saveData("inertia" + i.second + ".csv", "frequency", 1);
-  // }
-  // net::Network pantahom{std::string(SOURCE_DIR) + "/data/adjlist.csv",
-  //                       std::string(SOURCE_DIR) + "/data/coeffshom.csv"};
-  // auto start = std::chrono::high_resolution_clock::now();
-  // pantahom.dynamicalSimulation(0, 40, "cashkarp");
-  // auto end = std::chrono::high_resolution_clock::now();
-  // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  // std::cout << duration.count() << std::endl;
-  // pantahom.saveData("thetahom.csv", "angles", 1);
+  // panta.step(419, -9.0);
+  panta.noise(419, 25, 0.01);
+  panta.dynamicalSimulation(0, 5, "midpoint", 5.0e-3, 1.0e-0, 5.0e-7, 200);
+  panta.saveData("noisenoinertia.csv", "frequency", 1);
+  panta.saveData("noisenoinertiatheta.csv", "angles", 1);
 
   return 0;
 }

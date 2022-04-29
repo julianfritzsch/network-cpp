@@ -76,6 +76,7 @@ class Network {
   void cashKarp(double t0, double tf, double dtStart = 5.0e-3,
                 double dtMax = 1.0e-1, double eps = 1.0e-3, int maxTries = 40);
   arma::vec interpolate(arma::vec& tpoints, arma::mat& ypoints, double t);
+  void printInfo(double t0, double tf, double tt, arma::vec& y);
 
   // Data members
   /**
