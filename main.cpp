@@ -44,10 +44,10 @@ int main(int argv, char **argc) {
                                                           // {10, "10"}
   };
 
-  // net::Network panta{adjlist, coeffs, angles};
-  // panta.noise(419, 25, 0.01);
-  // panta.dynamicalSimulation(0, 25, "midpoint", 5.0e-3, 5.0e-2);
-  // panta.saveData("noisetestmid.csv", "frequency", 1);
+  net::Network panta{adjlist, coeffs, angles};
+  panta.step(419, -9.0);
+  panta.dynamicalSimulation(0, 25, "midpoint", 5.0e-3, 5.0e-2, 1.0e-5);
+  panta.saveData("steptestmid.csv", "frequency", 1);
 
   // for (auto &i : scaling) {
   //   std::cout << i.second << '\n';
@@ -66,14 +66,14 @@ int main(int argv, char **argc) {
   //   tmp.dynamicalSimulation(0, 5, "kapsrentrop", 5.0e-3, 2.5e-2, 5.0e-4);
   //   tmp.saveData("inertia" + i.second + ".csv", "frequency", 1);
   // }
-  net::Network pantahom{std::string(SOURCE_DIR) + "/data/adjlist.csv",
-                        std::string(SOURCE_DIR) + "/data/coeffshom.csv"};
-  auto start = std::chrono::high_resolution_clock::now();
-  pantahom.dynamicalSimulation(0, 40, "cashkarp");
-  auto end = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-  std::cout << duration.count() << std::endl;
-  pantahom.saveData("thetahom.csv", "angles", 1);
+  // net::Network pantahom{std::string(SOURCE_DIR) + "/data/adjlist.csv",
+  //                       std::string(SOURCE_DIR) + "/data/coeffshom.csv"};
+  // auto start = std::chrono::high_resolution_clock::now();
+  // pantahom.dynamicalSimulation(0, 40, "cashkarp");
+  // auto end = std::chrono::high_resolution_clock::now();
+  // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  // std::cout << duration.count() << std::endl;
+  // pantahom.saveData("thetahom.csv", "angles", 1);
 
   return 0;
 }

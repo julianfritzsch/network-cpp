@@ -338,11 +338,11 @@ void Network::midpoint(double t0, double tf, double dt) {
   yData.col(nSteps - 1) = y;
 
   // Insert the load frequencies
-  arma::mat tmpTheta{yData.head_rows(nNodes - nInertia)};
+  arma::mat tmpTheta{yData.rows(nInertia, nNodes - 1)};
   yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
   std::cout << "Final max omega: "
-            << arma::max(
-                   arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+            << arma::max(arma::abs(
+                   yData(arma::span(nNodes, 2 * nNodes - 1), yData.n_cols - 1)))
             << "\n";
 }
 
@@ -424,11 +424,11 @@ void Network::midpointNoise(double t0, double tf, double dt) {
   yData.col(nSteps - 1) = y;
 
   // Insert the load frequencies
-  arma::mat tmpTheta{yData.head_rows(nNodes - nInertia)};
+  arma::mat tmpTheta{yData.rows(nInertia, nNodes - 1)};
   yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
   std::cout << "Final max omega: "
-            << arma::max(
-                   arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+            << arma::max(arma::abs(
+                   yData(arma::span(nNodes, 2 * nNodes - 1), yData.n_cols - 1)))
             << "\n";
   // Reset power
   power = powerref;
@@ -543,12 +543,12 @@ void Network::kapsRentrop(double t0, double tf, double dtStart, double dtMax,
     }
   }
 
-  // Insert load frequency data
-  arma::mat tmpTheta{yData.head_rows(nNodes - nInertia)};
+  // Insert the load frequencies
+  arma::mat tmpTheta{yData.rows(nInertia, nNodes - 1)};
   yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
   std::cout << "Final max omega: "
-            << arma::max(
-                   arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+            << arma::max(arma::abs(
+                   yData(arma::span(nNodes, 2 * nNodes - 1), yData.n_cols - 1)))
             << "\n";
 }
 
@@ -638,8 +638,14 @@ void Network::kapsRentropNoise(double t0, double tf, double dtStart,
   double tt{t0};
   double dt{dtStart};
   arma::vec y{arma::join_cols(initAngles, arma::vec(nInertia))};
-  yData.insert_cols(0, y);
-  t.insert_rows(0, arma::rowvec{tt});
+  std::size_t chunkSize{10000};
+  arma::mat chunk(nNodes + nInertia, chunkSize);
+  std::list<arma::mat> chunks;
+  arma::vec tchunk(chunkSize);
+  std::list<arma::vec> tchunks;
+  chunk.col(0) = y;
+  tchunk(0) = tt;
+  int steps{0};
 
   // Create needed arrays
   arma::sp_mat jacobian, leftSide, timeDer;
@@ -673,8 +679,13 @@ void Network::kapsRentropNoise(double t0, double tf, double dtStart,
       dt = std::min(0.95 * std::pow(1.0 / error, 1.0 / 4.0) * dt,
                     std::min(1.5 * dt, dtMax));
       tries = 0;
-      yData.insert_cols(yData.n_cols, y);
-      t.insert_rows(t.n_rows, arma::rowvec{tt});
+      steps++;
+      if (steps % chunkSize == 0) {
+        chunks.push_back(chunk);
+        tchunks.push_back(tchunk);
+      }
+      chunk.col(steps % chunkSize) = y;
+      tchunk(steps % chunkSize) = tt;
       // Print some useful information
       std::cout << std::fixed << std::setprecision(1)
                 << (tt - t0) / (tf - t0) * 100
@@ -696,12 +707,27 @@ void Network::kapsRentropNoise(double t0, double tf, double dtStart,
     }
   }
 
-  // Insert load frequency data
-  arma::mat tmpTheta{yData.head_rows(nNodes - nInertia)};
+  // Stitch the chunks together
+  yData = arma::mat(nNodes + nInertia, steps + 1);
+  t = arma::vec(steps + 1);
+  std::size_t i{0};
+  while (!chunks.empty()) {
+    yData.cols(i * chunkSize, (i + 1) * chunkSize - 1) = chunks.front();
+    t.rows(i * chunkSize, (i + 1) * chunkSize - 1) = tchunks.front();
+    chunks.pop_front();
+    tchunks.pop_front();
+    ++i;
+  }
+  yData.tail_cols(steps % chunkSize + 1) =
+      chunk.head_cols(steps % chunkSize + 1);
+  t.tail_rows(steps % chunkSize + 1) = tchunk.head_rows(steps % chunkSize + 1);
+
+  // Insert the load frequencies
+  arma::mat tmpTheta{yData.rows(nInertia, nNodes - 1)};
   yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
   std::cout << "Final max omega: "
-            << arma::max(
-                   arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+            << arma::max(arma::abs(
+                   yData(arma::span(nNodes, 2 * nNodes - 1), yData.n_cols - 1)))
             << "\n";
 }
 
@@ -768,7 +794,7 @@ void Network::cashKarp(double t0, double tf, double dtStart, double dtMax,
   // The data is saved in chunks that are then pushed into a list when they are
   // full. This saves us from having to constantly reallocate data without pre
   // allocating huge amounts of data
-  std::size_t chunkSize = 10000;
+  std::size_t chunkSize{10000};
   arma::mat chunk(nNodes + nInertia, chunkSize);
   std::list<arma::mat> chunks;
   arma::vec tchunk(chunkSize);
@@ -848,12 +874,12 @@ void Network::cashKarp(double t0, double tf, double dtStart, double dtMax,
       chunk.head_cols(steps % chunkSize + 1);
   t.tail_rows(steps % chunkSize + 1) = tchunk.head_rows(steps % chunkSize + 1);
 
-  // Insert load frequency data
-  arma::mat tmpTheta{yData.head_rows(nNodes - nInertia)};
+  // Insert the load frequencies
+  arma::mat tmpTheta{yData.rows(nInertia, nNodes - 1)};
   yData.insert_rows(yData.n_rows, derivative(t, tmpTheta));
   std::cout << "Final max omega: "
-            << arma::max(
-                   arma::abs(y(arma::span(nNodes, nNodes + nInertia - 1))))
+            << arma::max(arma::abs(
+                   yData(arma::span(nNodes, 2 * nNodes - 1), yData.n_cols - 1)))
             << "\n";
 }
 
